@@ -80,6 +80,9 @@ export function runFlow(nc: Nextcloud, flow: string, vars: Record<string, string
   // Not the app failing: the driver died. Kill it, drop its stale port forward, let it wind down
   // (a retry started right away dies again within milliseconds), reinstall it and run the flow again.
   for (let retry = 0; retry < 2 && result.status !== 0 && driverDied(result); retry++) {
+    // On a loaded CI host adb itself drops the emulator ("device offline"): get it back first.
+    adb(['reconnect', 'offline']);
+    adb(['wait-for-device'], 120_000);
     for (const pkg of MAESTRO_DRIVER_PACKAGES) adb(['shell', 'am', 'force-stop', pkg]);
     adb(['forward', '--remove-all']);
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10_000);
@@ -199,9 +202,9 @@ export async function installApp(): Promise<void> {
   }
 }
 
-function adb(args: string[]): string {
+function adb(args: string[], timeout?: number): string {
   try {
-    return execFileSync('adb', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return execFileSync('adb', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout });
   } catch {
     return '';
   }
