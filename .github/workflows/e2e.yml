@@ -56,6 +56,18 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Install NDK and CMake
+        run: |
+          for pkg in "ndk;27.1.12297006" "ndk;27.0.12077973" "cmake;3.22.1"; do
+            for attempt in 1 2 3; do
+              yes | sdkmanager --install "$pkg" > /dev/null || true
+              # "ndk;X" lands in $ANDROID_HOME/ndk/X; a failed install leaves no source.properties.
+              [ -f "$ANDROID_HOME/${pkg/;//}/source.properties" ] && break
+              [ "$attempt" = 3 ] && exit 1
+              sleep 15
+            done
+          done
+
       - name: Build release APK (x86_64)
         run: |
           EXPO_NO_GIT_STATUS=1 npx expo prebuild -p android --clean --no-install
