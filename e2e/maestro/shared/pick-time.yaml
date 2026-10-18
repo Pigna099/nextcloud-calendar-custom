@@ -5,12 +5,16 @@ appId: com.soluce.nextcloudcalendar
 - tapOn: "OK"
 - tapOn:
     id: android:id/toggle_mode
+# Tap the right edge: eraseText deletes behind the cursor, and a centre tap on a
+# two-digit value ("11") leaves it between the digits, so the new value is rejected.
 - tapOn:
     id: android:id/input_hour
+    point: "95%,50%"
 - eraseText: 2
 - inputText: ${HOUR}
 - tapOn:
     id: android:id/input_minute
+    point: "95%,50%"
 - eraseText: 2
 - inputText: ${MINUTE}
 - runFlow:
