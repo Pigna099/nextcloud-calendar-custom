@@ -39,16 +39,24 @@ export function setupSuite(): Suite {
   return suite;
 }
 
-const ANIMATION_SCALES = ['window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'];
+const DEVICE_SETTINGS: Record<string, string> = {
+  window_animation_scale: '0',
+  transition_animation_scale: '0',
+  animator_duration_scale: '0',
+  hide_error_dialogs: '1',
+};
 
 /**
  * Turns system animations off for the run: Maestro waits for the screen to settle after every tap,
- * so animations cost seconds per step. Returns a function putting the previous values back.
+ * so animations cost seconds per step. Also hides system error dialogs: on a slow CI emulator the
+ * launcher ANRs and its "isn't responding" dialog covers the app, hiding every element from Maestro.
+ * Returns a function putting the previous values back.
  */
-export function disableAnimations(): () => void {
-  const before = ANIMATION_SCALES.map((key) => adb(['shell', 'settings', 'get', 'global', key]).trim());
-  for (const key of ANIMATION_SCALES) adb(['shell', 'settings', 'put', 'global', key, '0']);
-  return () => ANIMATION_SCALES.forEach((key, i) => {
+export function prepareDevice(): () => void {
+  const keys = Object.keys(DEVICE_SETTINGS);
+  const before = keys.map((key) => adb(['shell', 'settings', 'get', 'global', key]).trim());
+  for (const key of keys) adb(['shell', 'settings', 'put', 'global', key, DEVICE_SETTINGS[key]]);
+  return () => keys.forEach((key, i) => {
     if (!before[i]) return;
     adb(['shell', 'settings', ...(before[i] === 'null' ? ['delete', 'global', key] : ['put', 'global', key, before[i]])]);
   });

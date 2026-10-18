@@ -1,4 +1,4 @@
-import { disableAnimations, installApp, runFlow, today } from './app';
+import { prepareDevice, installApp, runFlow, today } from './app';
 import { allDay } from './ics';
 import { ADMIN, E2E_CAL, Nextcloud, NextcloudContainer, SEED_TITLE, SEED_UID, locationOf } from './nextcloud';
 
@@ -9,7 +9,7 @@ import { ADMIN, E2E_CAL, Nextcloud, NextcloudContainer, SEED_TITLE, SEED_UID, lo
 export default async function globalSetup(): Promise<void> {
   const [started] = await Promise.all([new NextcloudContainer().start(), installApp()]);
   (globalThis as { e2eNextcloud?: unknown }).e2eNextcloud = started;
-  (globalThis as { e2eRestoreAnimations?: () => void }).e2eRestoreAnimations = disableAnimations();
+  (globalThis as { e2eRestoreDevice?: () => void }).e2eRestoreDevice = prepareDevice();
   const where = locationOf(started);
   const nc = new Nextcloud(where);
   await nc.installApp('calendar');
