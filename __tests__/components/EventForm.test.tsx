@@ -353,3 +353,23 @@ describe('EventForm contact suggestions', () => {
     );
   });
 });
+
+describe('EventForm testIDs', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en');
+  });
+
+  it('exposes the testIDs used by the E2E flows', () => {
+    const { getByTestId } = render(<EventForm {...baseProps} />);
+    for (const id of ['event-form-title', 'event-form-all-day', 'event-form-location', 'event-form-recurrence', 'event-form-alert-default', 'event-form-alert-15', 'event-form-attendee-input', 'event-form-attendee-add']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+  });
+
+  it('marks the pressed alert pill as selected (the E2E flow checks it)', () => {
+    const { getByTestId } = render(<EventForm {...baseProps} />);
+    fireEvent.press(getByTestId('event-form-alert-15'));
+    expect(getByTestId('event-form-alert-15').props.accessibilityState).toMatchObject({ selected: true });
+    expect(getByTestId('event-form-alert-default').props.accessibilityState).toMatchObject({ selected: false });
+  });
+});

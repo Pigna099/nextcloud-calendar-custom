@@ -97,6 +97,7 @@ export default function EditEventScreen() {
           onBack={() => router.back()}
           right={
             <IconButton
+              testID="event-form-save"
               glass
               round
               size={40}
