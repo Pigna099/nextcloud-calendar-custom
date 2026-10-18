@@ -2,6 +2,7 @@ appId: com.soluce.nextcloudcalendar
 ---
 - stopApp
 - launchApp
+- runFlow: dismiss-anr.yaml
 - extendedWaitUntil:
     visible:
       id: calendar-fab-new

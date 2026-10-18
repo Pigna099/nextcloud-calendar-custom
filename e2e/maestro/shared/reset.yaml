@@ -4,3 +4,4 @@ appId: com.soluce.nextcloudcalendar
     clearState: true
     permissions:
       all: allow
+- runFlow: dismiss-anr.yaml

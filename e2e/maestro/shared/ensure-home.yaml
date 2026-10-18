@@ -5,6 +5,7 @@ appId: com.soluce.nextcloudcalendar
 - launchApp:
     permissions:
       all: allow
+- runFlow: dismiss-anr.yaml
 - extendedWaitUntil:
     visible:
       id: calendar-fab-new

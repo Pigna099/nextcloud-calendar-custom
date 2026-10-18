@@ -43,19 +43,20 @@ const DEVICE_SETTINGS: Record<string, string> = {
   window_animation_scale: '0',
   transition_animation_scale: '0',
   animator_duration_scale: '0',
-  hide_error_dialogs: '1',
 };
 
 /**
  * Turns system animations off for the run: Maestro waits for the screen to settle after every tap,
- * so animations cost seconds per step. Also hides system error dialogs: on a slow CI emulator the
- * launcher ANRs and its "isn't responding" dialog covers the app, hiding every element from Maestro.
+ * so animations cost seconds per step. Also closes system dialogs: on a slow CI emulator the
+ * launcher ANRs while booting and its "isn't responding" dialog covers the app, hiding every
+ * element from Maestro (later ones: maestro/shared/dismiss-anr.yaml).
  * Returns a function putting the previous values back.
  */
 export function prepareDevice(): () => void {
   const keys = Object.keys(DEVICE_SETTINGS);
   const before = keys.map((key) => adb(['shell', 'settings', 'get', 'global', key]).trim());
   for (const key of keys) adb(['shell', 'settings', 'put', 'global', key, DEVICE_SETTINGS[key]]);
+  adb(['shell', 'am', 'broadcast', '-a', 'android.intent.action.CLOSE_SYSTEM_DIALOGS']);
   return () => keys.forEach((key, i) => {
     if (!before[i]) return;
     adb(['shell', 'settings', ...(before[i] === 'null' ? ['delete', 'global', key] : ['put', 'global', key, before[i]])]);
