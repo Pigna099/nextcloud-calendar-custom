@@ -71,6 +71,16 @@ const config: ExpoConfig = {
 
     plugins: [
         './plugins/withAndroidNetworkSecurityConfig',
+        [
+            'expo-build-properties',
+            {
+                android: {
+                    enableMinifyInReleaseBuilds: true,
+                    enableShrinkResourcesInReleaseBuilds: true,
+                    extraProguardRules: '-keep class expo.modules.adapters.react.apploader.RNHeadlessAppLoader { *; }',
+                },
+            },
+        ],
         '@morrowdigital/watermelondb-expo-plugin',
         '@react-native-community/datetimepicker',
         'expo-router',
