@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 baseline validated; iOS CI pipeline in progress |
+| Status | **Phase 0 complete**; Phase 1 baseline validated; iOS + Android bundle CI green; dependency alignment decision next |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -223,9 +223,9 @@ upstream Expo organization, signing credentials, or GitHub App.
 - Remaining T1.2 work: decide whether to provision `EXPO_TOKEN` / `APP_ID` /
   `APP_PRIVATE_KEY` and enable release/EAS, or guard/disable those workflows until T1.7.
 
-**Note:** Actions is enabled; the five inherited workflows are active, plus
-`ios-build.yml` on the CI branch. The upstream-specific secrets/variables are **not**
-configured in the custom repository.
+**Note:** Actions is enabled; all six workflows are active (the five inherited workflows
+plus `ios-build.yml`). The Test workflow also exports an Android JS bundle. The
+upstream-specific secrets/variables are **not** configured in the custom repository.
 
 ---
 
@@ -380,25 +380,45 @@ Jest pass; iOS and Android native builds are validated after any upgrade.
 
 ---
 
-### T1.9 — GitHub Actions iOS build pipeline — IN PROGRESS
+### T1.9 — GitHub Actions iOS build pipeline — DONE (2026-10-31)
 
 **Goal:** Add a no-secret, reproducible iOS build check on GitHub Actions before any
 calendar UI work.
 
-**Approach:** macOS runner; project Node from `.mise.toml` (or a pinned setup-node
-equivalent); `yarn install --immutable`; `expo prebuild --platform ios`; CocoaPods
-install; `xcodebuild` for a generic iOS Simulator with `CODE_SIGNING_ALLOWED=NO`; upload
-logs/artifacts. Trigger on pull requests and `workflow_dispatch`.
+**Approach:** macOS runner; project Node pinned to `24.22.2`; `yarn install --immutable`;
+`expo prebuild --platform ios`; CocoaPods install; Xcode 26 selection; `xcodebuild` for a
+generic iOS Simulator with `CODE_SIGNING_ALLOWED=NO`; upload logs/artifacts. Trigger on
+pull requests and `workflow_dispatch`.
+
+**Evidence:**
+
+- PR #1 (`ci/ios-simulator-build`), run
+  [41212577530](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/41212577530):
+  **success in 33m16s** on `macos-15`, Xcode 26.3.
+- All workflow steps passed: install, prebuild, CocoaPods, Xcode selection, native build,
+  artifact upload.
+- Artifacts: `NextcloudCalendar-ios-simulator` (~67.5 MB) and `xcodebuild-log` (~87 KB).
+- The first run failed because the default Xcode 16.4/Swift 6.1 could not resolve a
+  dependency requiring Swift 6.2; the workflow now selects the newest installed Xcode 26.x.
+- Merged to `main` as commit `2da3cdc` (PR #1).
+- A default-branch dispatch was started as run
+  [41215432449](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/41215432449)
+  to verify `main`; result pending at the time of this update.
 
 **Acceptance criteria:**
 
-- Workflow exists on a branch and runs successfully on GitHub Actions.
-- Prebuild, pod install, and `xcodebuild` succeed from a clean checkout.
-- No Apple/Expo secrets are required for the simulator build.
-- Signed device/TestFlight builds remain blocked on T1.7 (owner credentials).
-- `AGENTS.md` / `PLAND.md` record the workflow and the run URL.
+- [x] Workflow exists and runs successfully on GitHub Actions.
+- [x] Prebuild, pod install, and `xcodebuild` succeed from a clean checkout.
+- [x] No Apple/Expo secrets are required for the simulator build.
+- [x] Signed device/TestFlight builds remain blocked on T1.7.
+- [x] `AGENTS.md` / `PLAND.md` record the workflow and run URL.
 
-**Status:** In progress.
+**Notes:** The build takes ~33 minutes cold; macOS arm64 runners may queue for capacity.
+GitHub also warns that `actions/cache@v4`, `actions/checkout@v4`, `actions/setup-node@v4`,
+and `actions/upload-artifact@v4` target Node 20 (forced onto Node 24). This is a warning,
+not a failure; pin newer action majors in a maintenance ticket if desired.
+
+**Status:** Done.
 
 ---
 
@@ -477,6 +497,19 @@ the inherited CI.
   Gitleaks also pass.
 - Remaining CI policy work is release/EAS secret provisioning or guarding (T1.2).
 
+### 2026-10-31 — iOS and Android bundle CI green
+
+- iOS simulator build succeeded: run `41212577530`, **33m16s**, Xcode 26.3,
+  artifacts `NextcloudCalendar-ios-simulator` (~67.5 MB) and `xcodebuild-log` (~87 KB).
+- Merged PR #1 (`ci/ios-simulator-build`) to `main` as `2da3cdc`.
+- Added an Android JS bundle export to `test.yml`; merged PR #2 as `42d9157`.
+  PR run `41215198001` passed in **1m59s**.
+- Local `expo export --platform android` passed: 4,382 modules, 7.9 MB Hermes bundle.
+- `yarn npm audit --severity high`: no high-severity findings.
+- `main` now contains `.github/workflows/ios-build.yml` and the Android bundle check.
+- Dispatched a default-branch iOS run: `41215432449` (pending).
+- Upstream remains at `791b84c`; no upstream sync needed.
+
 ---
 
 ## 7. Risks and mitigations
@@ -498,9 +531,9 @@ the inherited CI.
 
 ## 8. Handoff notes
 
-**Start here:** T1.1 is complete. Next is T1.9 (GitHub Actions iOS simulator build),
-then T1.8 (dependency alignment decision), then T1.4 once the owner supplies the
-calendar-change requirements.
+**Start here:** T1.1 and T1.9 are complete; iOS and Android bundle CI are green on
+`main`. Next is T1.8 (dependency alignment decision), then T1.2's release/EAS policy,
+then T1.4 once the owner supplies the calendar-change requirements.
 
 **Repository rules**
 
@@ -519,9 +552,10 @@ calendar-change requirements.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** finish T1.9 (iOS simulator CI), then resolve T1.8 (dependency
-alignment decision), then obtain the owner's requirements for T1.4 before any calendar
-implementation.
+**Next recommended step:** resolve T1.8 (dependency/Expo SDK alignment decision), then
+T1.2's release/EAS policy, then obtain the owner's requirements for T1.4 before any
+calendar implementation. A default-branch iOS verification run (`41215432449`) is also
+pending.
 
 ---
 
