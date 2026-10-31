@@ -1,0 +1,106 @@
+name: iOS Build
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "src/**"
+      - "modules/**"
+      - "assets/**"
+      - "plugins/**"
+      - "patches/**"
+      - "app.config.ts"
+      - "package.json"
+      - "yarn.lock"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    name: iOS Simulator Build
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      CI: "1"
+      EXPO_NO_GIT_STATUS: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.22.2"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate iOS project
+        run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Show toolchain versions
+        run: |
+          node --version
+          yarn --version
+          xcodebuild -version
+          pod --version
+
+      - name: Build iOS Simulator app
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace NextcloudCalendar.xcworkspace \
+            -scheme NextcloudCalendar \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -quiet \
+            build 2>&1 | tee xcodebuild.log
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: NextcloudCalendar-ios-simulator
+          path: ios/build/Build/Products/Debug-iphonesimulator/*.app
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload xcodebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: ios/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
