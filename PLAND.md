@@ -489,9 +489,25 @@ CalDAV/ICS, widget, or navigation changes.
 - Targeted `yarn jest __tests__/components/MonthDayView.test.tsx --ci`: 19/19 passed.
 - Full `yarn jest --ci`: 107/107 suites, 982/982 tests passed.
 - `expo export --platform ios`: passed (7.9 MB Hermes bundle).
-- No changes outside the month view component and its tests.
+- No changes outside the month view component, its tests, and the manual iOS workflow.
 
-**Status:** Implemented locally; PR/merge and manual device visual verification pending.
+**Device test build (2026-10-31):**
+
+- Manual workflow run `41222439211` (`device-ipa`) succeeded in **20m5s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,584 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `034a7ea4b6d50bb444ed3c8731407db1780371a0d295189334d494e911241928`.
+- Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
+  `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
+- Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
+- Includes widget extension `com.soluce.nextcloud-calendar.ExpoWidgetsTarget`.
+- The bundled Hermes `main.jsbundle` contains the new `month-week-*` / `month-event-*`
+  view markers.
+- SideStore/AltStore: structurally suitable for re-signing; free Apple IDs may reject
+  the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
+ /no-widget sideload build may be needed if signing fails.
+
+**Status:** IPA ready for manual iPhone 13 mini installation; visual verification pending.
 
 ---
 
