@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 baseline/CI green; dependency alignment complete (PR #4) |
+| Status | **Phase 0 complete**; Phase 1 complete; T2.1 month view implemented (PR pending, manual visual check pending) |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -257,45 +257,35 @@ push to upstream; typecheck/tests after any merge.
 
 ---
 
-### T1.4 — Requirements intake for calendar customizations — BLOCKED (owner input)
+### T1.4 — Requirements intake for calendar customizations — DONE (2026-10-31)
 
 **Goal:** Turn the owner's intended calendar changes into an approved, testable spec
 before implementation.
 
-**Required input from owner:**
+**Approved brief:** Google Calendar-style month view, optimized for iPhone 13 mini
+(375 x 812 logical points).
 
-- The user-facing problem and target users.
-- Desired behavior in each calendar view (month/week/3-day/day/agenda).
-- Whether changes affect event creation/editing, recurrence, sync, widgets,
-  notifications, or account handling.
-- Visual/UX references or acceptance examples.
-- Priority and target release.
+- Full six-week month grid on one screen; seven equal columns, Monday-Sunday.
+- Date numbers at the top of each cell.
+- Compact colored event labels directly inside day cells, stacked vertically.
+- Multi-day events as continuous horizontal bars across adjacent days.
+- Preserve titles, colors, ordering, navigation, event detail, and creation flows.
+- UI-only: no changes to sync, storage, recurrence, scheduling, or data models.
+- No new dependencies; no unrelated screens; preserve branding.
+- Screenshot supplied as the primary visual reference.
 
-**Acceptance criteria:**
+**Acceptance criteria:** recorded in T2.1 below.
 
-- Written user stories with explicit acceptance criteria.
-- UX states for empty/loading/error/offline cases.
-- Data-model and CalDAV/ICS impact assessed.
-- Test plan (unit + E2E + manual) agreed.
-- Tickets split so each can ship independently.
-
-**Dependencies:** T1.1 and owner requirements. **Do not invent feature requirements or
-start UI/sync changes before this ticket is approved.**
+**Dependencies:** T1.1 and owner requirements.
 
 ---
 
-### T1.5 — Feature implementation breakdown — BLOCKED
+### T1.5 — Feature implementation breakdown — DONE (2026-10-31)
 
 **Goal:** Convert the approved T1.4 spec into small, independent implementation tickets.
 
-**Acceptance criteria:**
-
-- Each ticket has one responsibility, acceptance criteria, validation commands, and
-  rollback notes.
-- Tickets identify affected layers: route/UI, feature logic, database schema/migration,
-  CalDAV/ICS, sync, widgets/notifications, i18n, tests.
-- Dependencies and ordering are explicit.
-- No ticket combines schema migration, UI redesign, and release changes.
+**Result:** One UI-only ticket, **T2.1**, touching the month view component and its tests.
+No schema, sync, CalDAV/ICS, recurrence, notification, or widget changes are needed.
 
 **Dependencies:** T1.4.
 
@@ -457,6 +447,54 @@ not a failure; pin newer action majors in a maintenance ticket if desired.
 
 ---
 
+### T2.1 — Google Calendar-style month view — IMPLEMENTED (PR pending)
+
+**Goal:** Reproduce the supplied Google Calendar month layout on the existing Nextcloud
+data, optimized for iPhone 13 mini (375 x 812 logical points).
+
+**Scope:** UI-only changes in `src/features/calendar/components/MonthDayView.tsx` and
+`__tests__/components/MonthDayView.test.tsx`. No sync, storage, event model, recurrence,
+CalDAV/ICS, widget, or navigation changes.
+
+**Implementation:**
+
+- Fixed six-week grid with seven equal columns and adjacent-month days dimmed/disabled.
+- Date numbers rendered at the top of each cell.
+- Events rendered directly in cells as compact colored bars; titles are single-line and
+  clipped.
+- Multi-day events use a per-week lane layout with continuous horizontal bars and
+  continuation-aware corner radii.
+- Overlapping events are assigned lanes; overflow shows `+N` rather than clipping or
+  overlapping labels.
+- Removed the old selected-day event list and the `44%` fixed grid height. The month grid
+  now uses all available vertical space with no vertical scrolling.
+- Existing `onSelectDate`, `onPressCell`, `onPressEvent`, pager, and jump behavior are
+  preserved.
+
+**Acceptance criteria:**
+
+- [x] Full six-week grid rendered in one screen without a vertical ScrollView.
+- [x] Event titles are visible in day cells without selecting a date.
+- [x] Event colors and positions come from the existing event data.
+- [x] Multiple events are stacked in lanes; multi-day events span columns.
+- [x] Labels are clipped and overflow is reported with `+N`, preventing overlap.
+- [x] Event-detail and creation callbacks remain wired.
+- [x] Other calendar views, sync, storage, and data models are unchanged.
+- [ ] Manual visual comparison on an iPhone 13 mini simulator/device.
+- [ ] Visual density comparison with the supplied screenshot.
+
+**Evidence:**
+
+- `yarn tsc --noEmit`: passed.
+- Targeted `yarn jest __tests__/components/MonthDayView.test.tsx --ci`: 19/19 passed.
+- Full `yarn jest --ci`: 107/107 suites, 982/982 tests passed.
+- `expo export --platform ios`: passed (7.9 MB Hermes bundle).
+- No changes outside the month view component and its tests.
+
+**Status:** Implemented locally; PR/merge and manual device visual verification pending.
+
+---
+
 ## 5. Validation strategy
 
 | Layer | Command / method | When |
@@ -560,6 +598,17 @@ the inherited CI.
 - PR #4 merged as `4409574`; iOS native build succeeded in **31m34s** (run
   `41216514576`).
 
+### 2026-10-31 — T2.1 Google Calendar-style month view
+
+- Implemented the approved month-view brief in `MonthDayView.tsx` and updated its tests.
+- Fixed six-week grid, compact date numbers, in-cell event bars, per-week lanes,
+  multi-day spanning bars, `+N` overflow, and full-height flex layout without scrolling.
+- Removed the old selected-day list and the `44%` fixed grid height.
+- Validation: `tsc` pass; targeted 19/19 tests; full **107 suites / 982 tests** pass;
+  iOS JS export pass (7.9 MB Hermes bundle).
+- No sync, storage, recurrence, CalDAV, widget, or data-model changes.
+- Pending: commit/push, PR checks, and manual visual verification on an iPhone 13 mini.
+
 ---
 
 ## 7. Risks and mitigations
@@ -582,8 +631,9 @@ the inherited CI.
 ## 8. Handoff notes
 
 **Start here:** T1.1, T1.8, and T1.9 are complete; iOS and Android bundle CI are green
-on `main`. Next, resolve T1.2's release/EAS policy, then T1.4 once the owner supplies the
-calendar-change requirements.
+on `main`. T1.4/T1.5 produced T2.1, which is implemented and awaiting PR/visual review.
+Next: merge T2.1 after manual iPhone 13 mini verification, then resolve T1.2's release/EAS
+policy and T1.7's app identity.
 
 **Repository rules**
 
@@ -602,9 +652,9 @@ calendar-change requirements.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** resolve T1.2's release/EAS policy, then obtain the owner's
-requirements for T1.4 before any calendar implementation. Default-branch iOS run
-`41215432449` remains pending.
+**Next recommended step:** review T2.1 on an iPhone 13 mini simulator/device, then merge
+the PR if the visual density matches the reference. After that, resolve T1.2's release/EAS
+policy and T1.7's app identity. Default-branch iOS run `41215432449` is complete.
 
 ---
 

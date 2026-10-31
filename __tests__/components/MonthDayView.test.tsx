@@ -1,5 +1,6 @@
 import React from 'react';
-import { render as rtlRender } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+import { fireEvent, render as rtlRender } from '@testing-library/react-native';
 import { ThemeWrapper } from '../helpers/theme';
 import dayjs from 'dayjs';
 
@@ -142,16 +143,53 @@ describe('eventDayKeys', () => {
 });
 
 describe('MonthDayView', () => {
-  it('derives the selected day from the date prop and follows prop changes', () => {
-    const { getByText, queryByText, rerender } = render(view(june10));
+  it('renders event labels directly in the month grid', () => {
+    const { getByText } = render(view(june10));
+    expect(getByText('Birthday Party')).toBeTruthy();
+  });
 
-    expect(getByText(dayjs(june10).format('dddd, LL'))).toBeTruthy();
-    expect(queryByText('Birthday Party')).toBeNull();
+  it('renders a fixed six-week grid', () => {
+    const { getByTestId } = render(view(june10));
+    expect(getByTestId('month-week-5')).toBeTruthy();
+  });
 
-    rerender(view(june15));
+  it('opens an event when its month-grid label is pressed', () => {
+    const onPressEvent = jest.fn();
+    const { getByTestId } = render(
+      <MonthDayView
+        date={june10}
+        events={[event]}
+        weekStartsOn={0}
+        jump={{ nonce: 0, target: june10 }}
+        onSelectDate={jest.fn()}
+        onMonthChange={jest.fn()}
+        onPressEvent={onPressEvent}
+        onPressCell={jest.fn()}
+      />
+    );
 
-    expect(getByText(dayjs(june15).format('dddd, LL'))).toBeTruthy();
-    expect(queryByText('Birthday Party')).toBeTruthy();
+    fireEvent.press(getByTestId('month-event-e1-2'));
+    expect(onPressEvent).toHaveBeenCalledWith(event);
+  });
+
+  it('selects a day when its cell is pressed', () => {
+    const onSelectDate = jest.fn();
+    const { getByTestId } = render(
+      <MonthDayView
+        date={june10}
+        events={[event]}
+        weekStartsOn={0}
+        jump={{ nonce: 0, target: june10 }}
+        onSelectDate={onSelectDate}
+        onMonthChange={jest.fn()}
+        onPressEvent={jest.fn()}
+        onPressCell={jest.fn()}
+      />
+    );
+
+    fireEvent.press(getByTestId('month-day-2026-06-15'));
+    expect(onSelectDate).toHaveBeenCalled();
+    expect(dayjs(onSelectDate.mock.calls[0][0]).format('YYYY-MM-DD')).toBe('2026-06-15');
   });
 
   it('reports the first day of the paged-to month through onMonthChange', () => {
@@ -210,23 +248,18 @@ describe('MonthDayView multi-day all-day events', () => {
     );
   }
 
-  it('lists the event on its start day', () => {
-    expect(render(allDayView(new Date(2026, 5, 15))).queryByText('Conference')).toBeTruthy();
+  it('renders a multi-day event once as a spanning bar', () => {
+    expect(render(allDayView(new Date(2026, 5, 16))).getAllByText('Conference')).toHaveLength(1);
   });
 
-  it('lists the event on a middle day it spans', () => {
-    expect(render(allDayView(new Date(2026, 5, 16))).queryByText('Conference')).toBeTruthy();
+  it('spans three day columns for a three-day event', () => {
+    const { getByTestId } = render(allDayView(new Date(2026, 5, 16)));
+    const bar = StyleSheet.flatten(getByTestId('month-event-e2-2').props.style);
+    const expectedWidth = (100 / 7) * 3 - 4;
+    expect(parseFloat(String(bar.width))).toBeCloseTo(expectedWidth, 5);
   });
 
-  it('lists the event on its inclusive last day', () => {
-    expect(render(allDayView(new Date(2026, 5, 17))).queryByText('Conference')).toBeTruthy();
-  });
-
-  it('does not list the event the day before it starts', () => {
-    expect(render(allDayView(new Date(2026, 5, 14))).queryByText('Conference')).toBeNull();
-  });
-
-  it('does not list the event the day after it ends', () => {
-    expect(render(allDayView(new Date(2026, 5, 18))).queryByText('Conference')).toBeNull();
+  it('does not render the event in a later month', () => {
+    expect(render(allDayView(new Date(2026, 6, 15))).queryByText('Conference')).toBeNull();
   });
 });
