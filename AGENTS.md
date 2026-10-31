@@ -313,8 +313,8 @@ branch-protection check now passes.
   (`dev`, feature branches, `poc/super-calendar`) remain available through the fetch-only
   `upstream` remote and are not published in the custom repository.
 - **No linter/formatter:** rely on `tsc`, tests, and review.
-- **Expo SDK alignment:** PR #4 aligns the project to SDK 57 (Expo `57.0.31`, RN
-  `0.86.3`, `react-native-webview` `13.16.1`, etc.). `expo-doctor` passes 21/21 with
-  documented exclusions for WatermelonDB metadata and unknown local packages. Re-run
-  `expo install --check`, `expo-doctor`, `tsc`, Jest, and native builds after any
-  dependency change.
+- **Expo SDK alignment:** PR #4 (merged as `4409574`) aligns the project to SDK 57
+  (Expo `57.0.31`, RN `0.86.3`, `react-native-webview` `13.16.1`, etc.).
+  `expo-doctor` passes 21/21 with documented exclusions for WatermelonDB metadata and
+  unknown local packages. Re-run `expo install --check`, `expo-doctor`, `tsc`, Jest,
+  and native builds after any dependency change.
