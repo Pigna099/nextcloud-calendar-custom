@@ -258,9 +258,10 @@ secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`, `EXPO_TOKEN`, `GITLEAKS_LICENSE`
 Expo/EAS organization. Do not trigger release/EAS workflows until those are configured or the
 workflows are intentionally adapted.
 
-`main` is **protected**: pull requests are required, force pushes and deletions are disabled, and
-conversation resolution is required. Direct pushes to `main` are blocked for non-admins; use a
-branch + PR. Plumber's branch-protection check now passes.
+`main` is **protected**: pull requests are required, force pushes and deletions are disabled,
+conversation resolution is required, and the `Typecheck & Unit Tests` and `plumber` checks must
+pass. Direct pushes to `main` are blocked for non-admins; use a branch + PR. Plumber's
+branch-protection check now passes.
 
 `test.yml` runs only on pull requests, not pushes to `main`. Security and Plumber run on pushes to
 `main`.

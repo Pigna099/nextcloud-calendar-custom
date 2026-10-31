@@ -218,7 +218,8 @@ upstream Expo organization, signing credentials, or GitHub App.
   - `secrets-gitleaks`: passed.
   - `Plumber`: initially failed only because `main` had no branch protection.
 - Enabled `main` branch protection: pull requests required, force pushes and deletions
-  disabled, conversation resolution required. Plumber rerun `41212577492` passed.
+  disabled, conversation resolution required, and `Typecheck & Unit Tests` + `plumber`
+  required checks. Plumber rerun `41212577492` passed.
 - Remaining T1.2 work: decide whether to provision `EXPO_TOKEN` / `APP_ID` /
   `APP_PRIVATE_KEY` and enable release/EAS, or guard/disable those workflows until T1.7.
 
