@@ -246,15 +246,21 @@ Release: `yarn release` (release-it). CI release is triggered by merging a PR wh
 | Workflow | Trigger | Purpose | Requirements |
 | --- | --- | --- | --- |
 | `test.yml` | `pull_request` | `yarn install --immutable`, `tsc --noEmit`, `jest --ci` | Node LTS, Yarn cache |
+| `ios-build.yml` | PRs touching app/native paths + `workflow_dispatch` | Expo prebuild, CocoaPods, Xcode simulator build, artifact upload | macOS runner; no Apple signing secrets |
 | `security.yml` | PR + push to `main` | Trivy dependency scan, Gitleaks secret scan | `GITLEAKS_LICENSE` secret |
 | `plumber.yml` | PR + push to `main` | Plumber score/pipeline checks | Plumber access, OIDC |
 | `release.yml` | `workflow_dispatch`; closed PR to `main` with `[release]` | Version bump, changelog, release, EAS dispatch | `APP_ID` variable, `APP_PRIVATE_KEY`, `EXPO_TOKEN` |
 | `expo.yml` | `workflow_call` | EAS build and store submission | `EXPO_TOKEN`, EAS project access |
 
-GitHub Actions is enabled on the custom repository and all five workflows are active. The custom
-repository does **not** yet have upstream secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`,
-`EXPO_TOKEN`, `GITLEAKS_LICENSE`) or the upstream Expo/EAS organization. Do not trigger
-release/EAS workflows until those are configured or the workflows are intentionally adapted.
+GitHub Actions is enabled on the custom repository; the five inherited workflows are active, plus
+the new `ios-build.yml` on its PR branch. The custom repository does **not** yet have upstream
+secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`, `EXPO_TOKEN`, `GITLEAKS_LICENSE`) or the upstream
+Expo/EAS organization. Do not trigger release/EAS workflows until those are configured or the
+workflows are intentionally adapted.
+
+`main` is **protected**: pull requests are required, force pushes and deletions are disabled, and
+conversation resolution is required. Direct pushes to `main` are blocked for non-admins; use a
+branch + PR. Plumber's branch-protection check now passes.
 
 `test.yml` runs only on pull requests, not pushes to `main`. Security and Plumber run on pushes to
 `main`.
@@ -265,8 +271,9 @@ release/EAS workflows until those are configured or the workflows are intentiona
 
 1. Read `AGENTS.md` and `PLAND.md` before starting.
 2. Never push to `upstream`; push only to `origin` (`Pigna099/nextcloud-calendar-custom`).
-3. Keep `main` stable. Do app work on feature branches from `main`; keep planning/documentation
-   updates on `planning` unless the owner directs otherwise.
+3. Keep `main` stable. `main` is protected and requires a pull request; do app work on feature
+   branches from `main`; keep planning/documentation updates on `planning` unless the owner
+   directs otherwise.
 4. Never force-push or rewrite shared history. Do not delete release tags.
 5. Preserve GPL-3.0 licensing, upstream attribution, and commit authorship.
 6. Do not change app identity (display name, slug, bundle IDs, package ID, EAS project/owner)

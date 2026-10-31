@@ -186,7 +186,7 @@ tickets in one branch.
 
 ---
 
-### T1.2 — CI policy for the custom repository — READY
+### T1.2 — CI policy for the custom repository — IN PROGRESS
 
 **Goal:** Decide how the inherited workflows should run in a repository without the
 upstream Expo organization, signing credentials, or GitHub App.
@@ -210,8 +210,21 @@ upstream Expo organization, signing credentials, or GitHub App.
 
 **Dependencies:** T1.1 (so local and CI baselines agree).
 
-**Note:** Actions is enabled and all five workflows are active. The upstream-specific
-secrets/variables are **not** configured in the custom repository.
+**Progress (2026-10-31):**
+
+- PR #1 (`ci/ios-simulator-build`) exercised the inherited CI:
+  - `Typecheck & Unit Tests`: passed.
+  - `sca-deps` (Trivy): passed.
+  - `secrets-gitleaks`: passed.
+  - `Plumber`: initially failed only because `main` had no branch protection.
+- Enabled `main` branch protection: pull requests required, force pushes and deletions
+  disabled, conversation resolution required. Plumber rerun `41212577492` passed.
+- Remaining T1.2 work: decide whether to provision `EXPO_TOKEN` / `APP_ID` /
+  `APP_PRIVATE_KEY` and enable release/EAS, or guard/disable those workflows until T1.7.
+
+**Note:** Actions is enabled; the five inherited workflows are active, plus
+`ios-build.yml` on the CI branch. The upstream-specific secrets/variables are **not**
+configured in the custom repository.
 
 ---
 
@@ -453,6 +466,16 @@ the inherited CI.
 - Lint: not available (no lint script or config).
 - Next: T1.9 (iOS CI pipeline) and T1.8 (dependency alignment decision).
 
+### 2026-10-31 — CI protection and Plumber
+
+- Diagnosed the `Plumber` failure: it was solely `ISSUE-501` — `main` had no branch
+  protection.
+- Enabled `main` branch protection (PRs required, force pushes/deletions disabled,
+  conversation resolution required) via the GitHub API.
+- Reran Plumber `41212577492`: passed. On PR #1, Typecheck/Unit Tests, Trivy, and
+  Gitleaks also pass.
+- Remaining CI policy work is release/EAS secret provisioning or guarding (T1.2).
+
 ---
 
 ## 7. Risks and mitigations
@@ -467,7 +490,7 @@ the inherited CI.
 | Upstream drift | Merge conflicts, regressions | T1.3: periodic fetch + tested merges; never push upstream |
 | Recurrence/timezone regressions | Corrupt or wrong event times | Unit + E2E/manual checks for ICS/sync changes |
 | Accidental secrets | Credential exposure | Gitleaks, `.gitignore`, pre-commit, no secrets in docs/tests |
-| Force-push/history rewrite | Loss of provenance | Explicitly forbidden; branch protection recommended |
+| Force-push/history rewrite | Loss of provenance | Explicitly forbidden; `main` branch protection now blocks force pushes and deletions |
 | Large media in git | Slow clones/CI | Accept for now; avoid adding more large binaries |
 
 ---
