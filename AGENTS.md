@@ -246,7 +246,7 @@ Release: `yarn release` (release-it). CI release is triggered by merging a PR wh
 | Workflow | Trigger | Purpose | Requirements |
 | --- | --- | --- | --- |
 | `test.yml` | `pull_request` | `yarn install --immutable`, `tsc --noEmit`, `jest --ci`, Android JS bundle export | Node LTS, Yarn cache |
-| `ios-build.yml` | PRs touching app/native paths + `workflow_dispatch` | Expo prebuild, CocoaPods, Xcode simulator build, artifact upload | macOS runner; no Apple signing secrets |
+| `ios-build.yml` | `workflow_dispatch` (manual) | Expo prebuild, CocoaPods, Xcode simulator build, artifact upload | macOS runner; no Apple signing secrets |
 | `security.yml` | PR + push to `main` | Trivy dependency scan, Gitleaks secret scan | `GITLEAKS_LICENSE` secret |
 | `plumber.yml` | PR + push to `main` | Plumber score/pipeline checks | Plumber access, OIDC |
 | `release.yml` | `workflow_dispatch`; closed PR to `main` with `[release]` | Version bump, changelog, release, EAS dispatch | `APP_ID` variable, `APP_PRIVATE_KEY`, `EXPO_TOKEN` |
@@ -258,9 +258,10 @@ secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`, `EXPO_TOKEN`, `GITLEAKS_LICENSE`
 Expo/EAS organization. Do not trigger release/EAS workflows until those are configured or the
 workflows are intentionally adapted.
 
-The iOS simulator build is a cold native build and takes roughly 33 minutes on `macos-15`;
-macOS arm64 runners can also queue for capacity. Add caching or a larger runner before making it
-a required check on every PR.
+The iOS simulator build is a cold native build and takes roughly 31-33 minutes on `macos-15`;
+macOS arm64 runners can also queue for capacity. It is **manual-only** to conserve free-tier
+minutes and is not a required check. Run it only when a native dependency, app config, or
+iOS-specific change needs validation.
 
 `main` is **protected**: pull requests are required, force pushes and deletions are disabled,
 conversation resolution is required, and the `Typecheck & Unit Tests` and `plumber` checks must

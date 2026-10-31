@@ -220,6 +220,8 @@ upstream Expo organization, signing credentials, or GitHub App.
 - Enabled `main` branch protection: pull requests required, force pushes and deletions
   disabled, conversation resolution required, and `Typecheck & Unit Tests` + `plumber`
   required checks. Plumber rerun `41212577492` passed.
+- Made the iOS workflow `workflow_dispatch`-only to conserve free-tier macOS minutes;
+  it is not a required check. Trigger it manually when native validation is needed.
 - Remaining T1.2 work: decide whether to provision `EXPO_TOKEN` / `APP_ID` /
   `APP_PRIVATE_KEY` and enable release/EAS, or guard/disable those workflows until T1.7.
 
@@ -419,8 +421,8 @@ calendar UI work.
 
 **Approach:** macOS runner; project Node pinned to `24.22.2`; `yarn install --immutable`;
 `expo prebuild --platform ios`; CocoaPods install; Xcode 26 selection; `xcodebuild` for a
-generic iOS Simulator with `CODE_SIGNING_ALLOWED=NO`; upload logs/artifacts. Trigger on
-pull requests and `workflow_dispatch`.
+generic iOS Simulator with `CODE_SIGNING_ALLOWED=NO`; upload logs/artifacts. Manual
+`workflow_dispatch` only, to conserve free-tier macOS minutes.
 
 **Evidence:**
 
@@ -445,8 +447,9 @@ pull requests and `workflow_dispatch`.
 - [x] Signed device/TestFlight builds remain blocked on T1.7.
 - [x] `AGENTS.md` / `PLAND.md` record the workflow and run URL.
 
-**Notes:** The build takes ~33 minutes cold; macOS arm64 runners may queue for capacity.
-GitHub also warns that `actions/cache@v4`, `actions/checkout@v4`, `actions/setup-node@v4`,
+**Notes:** The build takes ~31-33 minutes cold; macOS arm64 runners may queue for capacity.
+It is manual-only and not a required check, to conserve free-tier minutes. GitHub also warns
+that `actions/cache@v4`, `actions/checkout@v4`, `actions/setup-node@v4`,
 and `actions/upload-artifact@v4` target Node 20 (forced onto Node 24). This is a warning,
 not a failure; pin newer action majors in a maintenance ticket if desired.
 

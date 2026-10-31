@@ -1,18 +1,9 @@
 name: iOS Build
 
+# Manual-only: macOS runners consume scarce free-tier minutes. Trigger this from
+# Actions -> iOS Build -> Run workflow when a native dependency, app config, or
+# iOS-specific change needs validation. It is intentionally not a required check.
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "src/**"
-      - "modules/**"
-      - "assets/**"
-      - "plugins/**"
-      - "patches/**"
-      - "app.config.ts"
-      - "package.json"
-      - "yarn.lock"
-      - ".github/workflows/ios-build.yml"
   workflow_dispatch:
 
 concurrency:
