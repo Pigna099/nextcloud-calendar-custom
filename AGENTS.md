@@ -66,6 +66,7 @@ style; do not introduce a formatter/linter as part of an unrelated change.
 
 | Path | Purpose |
 | --- | --- |
+| `.mise.toml` | Pinned project Node runtime (24.22.2) and Corepack environment |
 | `app/` | Expo Router routes (auth setup, tabs, calendar, event screens, settings) |
 | `src/components/` | Cross-cutting components (`Providers`, `RootNavigator`, splash, avatars) |
 | `src/features/calendar/` | Calendar views, navigation, drag/resize, layout and grid math |
@@ -178,40 +179,61 @@ EXDATE handling.
 
 ## 6. Commands
 
-Prerequisites: Node.js LTS, Corepack, Yarn 4.5.3, JDK 17, Android SDK; Xcode/CocoaPods on macOS
-for iOS. E2E additionally needs Docker, an Android emulator, `adb`, Maestro, and `just`.
-At bootstrap time (2026-10-31) the host had **no Node/Yarn/adb/Maestro**, so baseline checks could
-not run; see `PLAND.md`.
+### Isolated local toolchain (mise)
+
+The repository pins its project runtime in `.mise.toml`: **Node 24.22.2** (current LTS, matching
+CI's `lts/*` policy) and a non-interactive Corepack prompt. Mise installs under
+`~/.local/share/mise` and does **not** touch system Node, OpenCode's runtime, or its plugins.
+
+```bash
+mise trust
+mise install
+mise exec -- node --version        # v24.22.2
+mise exec -- corepack --version    # 0.36.0
+mise exec -- corepack yarn --version   # 4.5.3
+mise exec -- corepack enable       # optional: creates yarn shims only inside the mise Node install
+```
+
+Use `mise exec --` for every command (or activate mise in your shell). Do not run
+`mise use -g`, `corepack enable` globally, or install a system Node. The repository vendors
+Yarn 4.5.3 at `.yarn/releases/yarn-4.5.3.cjs`; `corepack yarn` honors `packageManager` and
+`.yarnrc.yml`.
+
+### Prerequisites
+
+Node.js LTS, Corepack, Yarn 4.5.3, JDK 17, Android SDK; Xcode/CocoaPods on macOS for iOS. E2E
+additionally needs Docker, an Android emulator, `adb`, Maestro, and `just`. The bootstrap host
+initially had no Node/Yarn/adb/Maestro; the isolated mise toolchain and baseline checks were added
+later on 2026-10-31 (see `PLAND.md`). Prefix commands with `mise exec --` unless mise is activated.
 
 ```bash
 # Install (postinstall applies patch-package patches)
-corepack enable
-yarn install --immutable      # CI
-yarn install                  # local development
+mise exec -- corepack yarn install --immutable      # CI
+mise exec -- corepack yarn install                  # local development
 
 # Static checks / unit tests
-yarn tsc --noEmit
-yarn test                     # Jest
-yarn jest __tests__/utils/ics.test.ts
-yarn jest -t 'RecurrencePicker'
+mise exec -- corepack yarn tsc --noEmit
+mise exec -- corepack yarn test                     # Jest
+mise exec -- corepack yarn jest __tests__/utils/ics.test.ts
+mise exec -- corepack yarn jest -t 'RecurrencePicker'
 
 # Development
-yarn start                    # Metro
-yarn android                  # expo run:android
-yarn ios                      # expo run:ios (macOS)
-npx expo prebuild             # generate native projects
-npx expo prebuild --clean     # regenerate; deletes android/ and ios/
+mise exec -- corepack yarn start                    # Metro
+mise exec -- corepack yarn android                  # expo run:android
+mise exec -- corepack yarn ios                      # expo run:ios (macOS)
+mise exec -- npx expo prebuild                      # generate native projects
+mise exec -- npx expo prebuild --clean              # regenerate; deletes android/ and ios/
 ```
 
 E2E and seeding:
 
 ```bash
-just e2e-all                  # boot emulator if needed, build APK, run Jest + Maestro
-just e2e-build                # prebuild Android + assembleRelease for the booted ABI
-just e2e                      # all Jest E2E suites
-just e2e e2e/event.e2e.ts     # one suite
-just seed                     # seed a Nextcloud instance
-just unseed                   # wipe seeded calendars
+mise exec -- just e2e-all                  # boot emulator if needed, build APK, run Jest + Maestro
+mise exec -- just e2e-build                # prebuild Android + assembleRelease for the booted ABI
+mise exec -- just e2e                      # all Jest E2E suites
+mise exec -- just e2e e2e/event.e2e.ts     # one suite
+mise exec -- just seed                     # seed a Nextcloud instance
+mise exec -- just unseed                   # wipe seeded calendars
 ```
 
 Release: `yarn release` (release-it). CI release is triggered by merging a PR whose title contains
@@ -279,3 +301,6 @@ release/EAS workflows until those are configured or the workflows are intentiona
   (`dev`, feature branches, `poc/super-calendar`) remain available through the fetch-only
   `upstream` remote and are not published in the custom repository.
 - **No linter/formatter:** rely on `tsc`, tests, and review.
+- **Expo SDK dependency drift:** `expo-doctor` currently reports a Hermes V1 regression
+  (RN 0.86.0), 27 outdated packages, and a major `react-native-webview` mismatch. See
+  `PLAND.md` T1.8 before changing native dependencies or release builds.

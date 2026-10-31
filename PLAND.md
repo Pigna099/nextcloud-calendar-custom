@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; application changes not started |
+| Status | **Phase 0 complete**; Phase 1 baseline validated; iOS CI pipeline in progress |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -65,8 +65,7 @@ modified.**
 - [x] No credentials, secrets, keystores, or build artifacts were published.
 - [x] GitHub Actions is enabled and the five existing workflows are active.
 - [x] Agent documentation is committed on the `planning` branch.
-- [ ] Baseline typecheck/unit tests executed on this machine — **deferred to T1.1**
-      because Node.js/Yarn are not installed on the bootstrap host.
+- [x] Baseline typecheck/unit tests executed in the isolated mise environment (T1.1).
 
 ---
 
@@ -148,40 +147,42 @@ tickets in one branch.
 
 ---
 
-### T1.1 — Baseline toolchain and static validation — READY (BLOCKED: environment)
+### T1.1 — Baseline toolchain and static validation — DONE (2026-10-31)
 
 **Goal:** Establish a reproducible green baseline before feature work.
 
-**Scope:**
+**Environment (isolated via mise):**
 
-- Install Node.js LTS and enable Corepack.
-- Run `yarn install --immutable` (postinstall applies `patch-package`).
-- Run `yarn tsc --noEmit`.
-- Run `yarn test` (Jest).
-- Record exact versions and any pre-existing failures.
+- mise `2026.10.24 linux-x64`
+- Node `24.22.2` at `~/.local/share/mise/installs/node/24.22.2/bin/node`
+- Corepack `0.36.0`; Yarn `4.5.3` (vendored at `.yarn/releases/yarn-4.5.3.cjs`)
+- `.mise.toml` pins the project runtime; `mise exec --` is used for all commands
+- No system-wide Node/Yarn was installed; global OpenCode config/plugins untouched
 
-**Acceptance criteria:**
+**Evidence (2026-10-31):**
 
-- Dependency install completes without modifying tracked files.
-- Typecheck passes, or every failure is documented with file/line and a ticket.
-- Unit suite passes, or every failure is documented and triaged.
-- Results are recorded in the progress log.
+- `mise trust` + `mise install`: passed.
+- `corepack yarn install --immutable`: passed. Yarn 4.5.3; 1,194 packages fetched
+  (+565.17 MiB); 1m34s. Warnings: `@react-native/jest-preset@0.86.0` peer-range
+  mismatch; missing peers `@babel/core` and `@react-native/metro-config`.
+- `yarn tsc --noEmit`: passed (exit 0, no output).
+- `yarn jest --ci`: **107/107 suites, 981/981 tests passed**, 48.769s. Console output
+  contains expected error-path logs from mocked network/keychain tests.
+- `npx expo config --type public --json`: passed. SDK 57.0.0; iOS bundle
+  `com.soluce.nextcloud-calendar`; Android package `com.soluce.nextcloudcalendar`;
+  versionCode `10902`.
+- `npx expo-doctor`: **18/21 checks passed; 3 failed** — (1) Hermes V1 regression:
+  RN 0.86.0 bundles 250829098.0.14; fix requires RN >=0.86.2 / Expo >=57.0.9;
+  (2) React Native Directory metadata warnings (WatermelonDB New Architecture,
+  unknown local packages); (3) 27 packages out of date, including major mismatch
+  `react-native-webview` 15.0.0 vs expected 13.16.1.
+- Lint: no lint script or config exists in the repository; not run.
+- `expo prebuild --platform ios --no-install`: passed; generated scheme
+  `NextcloudCalendar`; generated `ios/` was removed afterward (git-ignored).
 
-**Validation commands:**
+**Follow-up:** T1.8 (dependency/Expo SDK alignment).
 
-```bash
-node --version
-corepack enable
-yarn --version          # must be 4.5.3
-yarn install --immutable
-yarn tsc --noEmit
-yarn test
-```
-
-**Dependencies:** Network access to the npm registry; Node LTS.
-
-**Blocker:** On 2026-10-31 the bootstrap host had no `node`, `corepack`, or `yarn`
-(`node: command not found`). Java 21 and Docker were present. Install Node LTS first.
+**Status:** Done. No tracked source changes; `node_modules/` is ignored.
 
 ---
 
@@ -338,6 +339,55 @@ these without an explicit decision.
 
 ---
 
+### T1.8 — Expo SDK / dependency alignment — NEEDS DECISION
+
+**Goal:** Resolve `expo-doctor` findings before relying on native release builds.
+
+**Findings (2026-10-31):**
+
+- Hermes V1 regression: RN 0.86.0 bundles Hermes 250829098.0.14; the fix requires
+  RN >= 0.86.2 and Expo >= 57.0.9.
+- 27 packages are out of date relative to SDK 57 expectations, including a major
+  mismatch: `react-native-webview` 15.0.0 vs expected 13.16.1.
+- React Native Directory metadata warnings for WatermelonDB (untested on New
+  Architecture) and local/unknown packages (`live-updates`, `zxing-scanner`,
+  `tls-trust`, `expo-blob`, `@nozbe/simdjson`).
+
+**Options:**
+
+- **A:** Align dependencies with `npx expo install --fix`, regenerate native projects,
+  and rerun typecheck/Jest/doctor plus an iOS/Android build.
+- **B:** Explicitly exclude/accept known-safe mismatches and document the rationale.
+
+**Acceptance criteria:** doctor passes 21/21 or has documented exclusions; typecheck and
+Jest pass; iOS and Android native builds are validated after any upgrade.
+
+**Status:** Needs owner decision because it changes dependency and native build inputs.
+
+---
+
+### T1.9 — GitHub Actions iOS build pipeline — IN PROGRESS
+
+**Goal:** Add a no-secret, reproducible iOS build check on GitHub Actions before any
+calendar UI work.
+
+**Approach:** macOS runner; project Node from `.mise.toml` (or a pinned setup-node
+equivalent); `yarn install --immutable`; `expo prebuild --platform ios`; CocoaPods
+install; `xcodebuild` for a generic iOS Simulator with `CODE_SIGNING_ALLOWED=NO`; upload
+logs/artifacts. Trigger on pull requests and `workflow_dispatch`.
+
+**Acceptance criteria:**
+
+- Workflow exists on a branch and runs successfully on GitHub Actions.
+- Prebuild, pod install, and `xcodebuild` succeed from a clean checkout.
+- No Apple/Expo secrets are required for the simulator build.
+- Signed device/TestFlight builds remain blocked on T1.7 (owner credentials).
+- `AGENTS.md` / `PLAND.md` record the workflow and the run URL.
+
+**Status:** In progress.
+
+---
+
 ## 5. Validation strategy
 
 | Layer | Command / method | When |
@@ -385,13 +435,32 @@ the inherited CI.
 - CI release/EAS workflows require upstream secrets and Expo organization access.
 - `.github/assets` is ~70 MB, making clones heavier.
 
+### 2026-10-31 — Isolated toolchain and baseline validation
+
+- Added `.mise.toml` pinning Node `24.22.2`; installed it with mise under
+  `~/.local/share/mise`. No system-wide Node/Yarn was installed, and no global OpenCode
+  configuration or plugins were changed.
+- `corepack yarn install --immutable`: passed; 1,194 packages (+565.17 MiB) in 1m34s.
+  Peer warnings: `@react-native/jest-preset@0.86.0` range mismatch and missing
+  `@babel/core` / `@react-native/metro-config` peers.
+- `yarn tsc --noEmit`: passed (exit 0, no output).
+- `yarn jest --ci`: passed; **107/107 suites, 981/981 tests**, 48.769s.
+- `npx expo config --type public --json`: passed; SDK 57.0.0, version 1.9.2,
+  versionCode 10902.
+- `npx expo-doctor`: 18/21 checks passed; 3 failures recorded in T1.8.
+- `npx expo prebuild --platform ios --no-install`: passed; confirmed the generated
+  scheme is `NextcloudCalendar`; removed the generated `ios/` directory afterward.
+- Lint: not available (no lint script or config).
+- Next: T1.9 (iOS CI pipeline) and T1.8 (dependency alignment decision).
+
 ---
 
 ## 7. Risks and mitigations
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| No Node/Yarn on bootstrap host | Cannot verify typecheck/tests | T1.1: install Node LTS + Corepack; record versions |
+| Toolchain drift between agents/CI | Incompatible Node/Yarn behavior | `.mise.toml` pins Node 24.22.2; Yarn is vendored; CI should use the same runtime |
+| Expo SDK dependency drift / Hermes regression | Native runtime or build issues | T1.8: align dependencies or document exclusions; rerun doctor and native builds |
 | Inherited CI needs upstream secrets | Release/EAS jobs fail or publish wrong identity | T1.2: configure owner credentials or disable/adapt workflows |
 | Upstream app IDs / EAS project | Store conflicts, signing confusion | T1.7: explicit identity decision before distribution |
 | GPL/CITATION mismatch | Legal/compliance ambiguity | Keep GPL-3.0; legal review before any license change |
@@ -405,9 +474,9 @@ the inherited CI.
 
 ## 8. Handoff notes
 
-**Start here:** T1.1. Install Node.js LTS, enable Corepack, run the immutable install,
-typecheck, and Jest. Record results in the progress log. Then proceed to T1.4 only after
-the owner supplies the calendar-change requirements.
+**Start here:** T1.1 is complete. Next is T1.9 (GitHub Actions iOS simulator build),
+then T1.8 (dependency alignment decision), then T1.4 once the owner supplies the
+calendar-change requirements.
 
 **Repository rules**
 
@@ -418,15 +487,17 @@ the owner supplies the calendar-change requirements.
 - Do not change app identity or licensing without owner approval.
 - Update this file after each ticket with status, evidence, and blockers.
 
-**Current environment caveat (2026-10-31)**
+**Current environment (2026-10-31)**
 
 - `gh` is authenticated as `Pigna099`; do not commit its credentials.
-- Node.js, Corepack, Yarn, `adb`, and Maestro were absent on the bootstrap host.
-- Java 21 and Docker were present.
-- The repository is fully published; only local validation is blocked.
+- Node 24.22.2, Corepack 0.36.0, and Yarn 4.5.3 are available via `mise exec --`;
+  no system-wide Node/Yarn is installed.
+- `adb` and Maestro are still absent; Java 21 and Docker are present.
+- The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** complete **T1.1** (toolchain + baseline), then obtain the
-owner's requirements for **T1.4** before any calendar implementation.
+**Next recommended step:** finish T1.9 (iOS simulator CI), then resolve T1.8 (dependency
+alignment decision), then obtain the owner's requirements for T1.4 before any calendar
+implementation.
 
 ---
 
