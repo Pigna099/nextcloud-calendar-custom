@@ -5,6 +5,15 @@ name: iOS Build
 # iOS-specific change needs validation. It is intentionally not a required check.
 on:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build target"
+        required: true
+        default: simulator
+        type: choice
+        options:
+          - simulator
+          - device-ipa
 
 concurrency:
   group: ios-build-${{ github.ref }}
@@ -14,10 +23,10 @@ permissions:
   contents: read
 
 jobs:
-  simulator:
-    name: iOS Simulator Build
+  ios:
+    name: iOS Build
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       CI: "1"
       EXPO_NO_GIT_STATUS: "1"
@@ -72,6 +81,7 @@ jobs:
           pod --version
 
       - name: Build iOS Simulator app
+        if: github.event.inputs.build_type == 'simulator'
         working-directory: ios
         run: |
           set -o pipefail
@@ -87,11 +97,52 @@ jobs:
             -quiet \
             build 2>&1 | tee xcodebuild.log
 
+      - name: Build unsigned device app
+        if: github.event.inputs.build_type == 'device-ipa'
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace NextcloudCalendar.xcworkspace \
+            -scheme NextcloudCalendar \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -quiet \
+            build 2>&1 | tee xcodebuild.log
+
+      - name: Package unsigned IPA
+        if: github.event.inputs.build_type == 'device-ipa'
+        working-directory: ios
+        run: |
+          set -e
+          APP="build/Build/Products/Release-iphoneos/NextcloudCalendar.app"
+          test -d "$APP"
+          rm -rf Payload NextcloudCalendar-unsigned.ipa
+          mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qry NextcloudCalendar-unsigned.ipa Payload
+          ls -lh NextcloudCalendar-unsigned.ipa
+
       - name: Upload simulator app
+        if: github.event.inputs.build_type == 'simulator'
         uses: actions/upload-artifact@v4
         with:
           name: NextcloudCalendar-ios-simulator
           path: ios/build/Build/Products/Debug-iphonesimulator/*.app
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload unsigned IPA
+        if: github.event.inputs.build_type == 'device-ipa'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NextcloudCalendar-unsigned-ipa
+          path: ios/NextcloudCalendar-unsigned.ipa
           if-no-files-found: error
           retention-days: 7
 
