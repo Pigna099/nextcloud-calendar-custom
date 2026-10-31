@@ -1,0 +1,9 @@
+[tools]
+# Match the repository's CI policy (`node-version: "lts/*"`) with a pinned LTS
+# release so every agent gets the same runtime. The repo has no `engines` field;
+# Expo SDK 57 / React Native 0.86 require a modern Node LTS.
+node = "24.22.2"
+
+[env]
+# Keep Corepack non-interactive in agent/CI shells.
+COREPACK_ENABLE_DOWNLOAD_PROMPT = "0"
