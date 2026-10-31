@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 baseline validated; iOS + Android bundle CI green; dependency alignment decision next |
+| Status | **Phase 0 complete**; Phase 1 baseline/CI green; dependency alignment implemented (PR #4, iOS validation pending) |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -353,7 +353,7 @@ these without an explicit decision.
 
 ---
 
-### T1.8 — Expo SDK / dependency alignment — NEEDS DECISION
+### T1.8 — Expo SDK / dependency alignment — IN PROGRESS (PR #4)
 
 **Goal:** Resolve `expo-doctor` findings before relying on native release builds.
 
@@ -376,7 +376,29 @@ these without an explicit decision.
 **Acceptance criteria:** doctor passes 21/21 or has documented exclusions; typecheck and
 Jest pass; iOS and Android native builds are validated after any upgrade.
 
-**Status:** Needs owner decision because it changes dependency and native build inputs.
+**Implementation (2026-10-31, PR #4):**
+
+- Ran `npx expo install --fix`; updated 27 Expo/native packages.
+- Key versions: Expo `57.0.31`, React Native `0.86.3`, Reanimated `4.5.1`,
+  Worklets `0.10.1`, `react-native-webview` `13.16.1` (down from 15.0.0), Jest Expo
+  `57.0.6`.
+- Added dev peers `@babel/core` and `@react-native/metro-config`; updated
+  `@react-native/jest-preset` to `0.86.3`.
+- Added documented `expo.doctor.reactNativeDirectoryCheck` exclusions for WatermelonDB
+  New Architecture metadata and unknown local packages.
+
+**Evidence:**
+
+- `expo-doctor`: **21/21 passed**.
+- `expo install --check`: dependencies up to date.
+- `yarn tsc --noEmit`: passed.
+- `yarn jest --ci`: **107/107 suites, 981/981 tests passed**.
+- Android JS export: passed (8 MB Hermes bundle).
+- iOS prebuild: passed (`NextcloudCalendar` scheme).
+
+**Pending:** iOS native build on PR #4; merge only after it is green.
+
+**Status:** In progress (PR #4).
 
 ---
 
@@ -510,6 +532,18 @@ the inherited CI.
 - Dispatched a default-branch iOS run: `41215432449` (pending).
 - Upstream remains at `791b84c`; no upstream sync needed.
 
+### 2026-10-31 — Dependency alignment (T1.8)
+
+- Ran `npx expo install --fix`; upgraded 27 packages including Expo `57.0.31`,
+  React Native `0.86.3`, Reanimated `4.5.1`, Worklets `0.10.1`, and
+  `react-native-webview` `13.16.1`.
+- Added `@babel/core`, `@react-native/metro-config`, and updated
+  `@react-native/jest-preset` to `0.86.3`.
+- Added documented `expo-doctor` exclusions for WatermelonDB and unknown local packages.
+- Validation: `expo-doctor` 21/21, `expo install --check` clean, `tsc` pass,
+  Jest **107 suites / 981 tests pass**, Android export pass, iOS prebuild pass.
+- PR #4 is open; iOS native build is validating the dependency set.
+
 ---
 
 ## 7. Risks and mitigations
@@ -532,8 +566,9 @@ the inherited CI.
 ## 8. Handoff notes
 
 **Start here:** T1.1 and T1.9 are complete; iOS and Android bundle CI are green on
-`main`. Next is T1.8 (dependency alignment decision), then T1.2's release/EAS policy,
-then T1.4 once the owner supplies the calendar-change requirements.
+`main`. T1.8 is implemented in PR #4 and awaiting the iOS native build. After it merges,
+resolve T1.2's release/EAS policy, then T1.4 once the owner supplies the calendar-change
+requirements.
 
 **Repository rules**
 
@@ -552,10 +587,9 @@ then T1.4 once the owner supplies the calendar-change requirements.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** resolve T1.8 (dependency/Expo SDK alignment decision), then
-T1.2's release/EAS policy, then obtain the owner's requirements for T1.4 before any
-calendar implementation. A default-branch iOS verification run (`41215432449`) is also
-pending.
+**Next recommended step:** merge T1.8 (PR #4) once its iOS native build is green, then
+resolve T1.2's release/EAS policy, then obtain the owner's requirements for T1.4 before
+any calendar implementation. Default-branch iOS run `41215432449` remains pending.
 
 ---
 
