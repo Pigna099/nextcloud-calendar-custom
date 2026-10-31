@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 baseline/CI green; dependency alignment implemented (PR #4, iOS validation pending) |
+| Status | **Phase 0 complete**; Phase 1 baseline/CI green; dependency alignment complete (PR #4) |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -353,7 +353,7 @@ these without an explicit decision.
 
 ---
 
-### T1.8 — Expo SDK / dependency alignment — IN PROGRESS (PR #4)
+### T1.8 — Expo SDK / dependency alignment — DONE (2026-10-31)
 
 **Goal:** Resolve `expo-doctor` findings before relying on native release builds.
 
@@ -374,7 +374,7 @@ these without an explicit decision.
 - **B:** Explicitly exclude/accept known-safe mismatches and document the rationale.
 
 **Acceptance criteria:** doctor passes 21/21 or has documented exclusions; typecheck and
-Jest pass; iOS and Android native builds are validated after any upgrade.
+Jest pass; iOS native build and Android JS bundle are validated after the upgrade.
 
 **Implementation (2026-10-31, PR #4):**
 
@@ -395,10 +395,20 @@ Jest pass; iOS and Android native builds are validated after any upgrade.
 - `yarn jest --ci`: **107/107 suites, 981/981 tests passed**.
 - Android JS export: passed (8 MB Hermes bundle).
 - iOS prebuild: passed (`NextcloudCalendar` scheme).
+- Patch refresh: removed the obsolete `expo-widgets` patch, regenerated
+  `expo-modules-jsi+57.1.3.patch`, and retargeted the `@expo/ui` patch to `57.0.26`.
+- iOS native build on PR #4: **success in 31m34s** (run
+  [41216514576](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/41216514576)).
+- PR #4 merged to `main` as `4409574`; all required checks passed.
 
-**Pending:** iOS native build on PR #4; merge only after it is green.
+**Acceptance criteria:**
 
-**Status:** In progress (PR #4).
+- [x] `expo-doctor` 21/21 (documented exclusions).
+- [x] Typecheck and Jest pass.
+- [x] iOS native build validated.
+- [x] Android JS bundle validated (the native Android build still needs an Android SDK/emulator, T1.6).
+
+**Status:** Done.
 
 ---
 
@@ -542,7 +552,10 @@ the inherited CI.
 - Added documented `expo-doctor` exclusions for WatermelonDB and unknown local packages.
 - Validation: `expo-doctor` 21/21, `expo install --check` clean, `tsc` pass,
   Jest **107 suites / 981 tests pass**, Android export pass, iOS prebuild pass.
-- PR #4 is open; iOS native build is validating the dependency set.
+- Refreshed `patch-package` patches for the new Expo versions; removed an obsolete
+  `expo-widgets` patch.
+- PR #4 merged as `4409574`; iOS native build succeeded in **31m34s** (run
+  `41216514576`).
 
 ---
 
@@ -551,7 +564,7 @@ the inherited CI.
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
 | Toolchain drift between agents/CI | Incompatible Node/Yarn behavior | `.mise.toml` pins Node 24.22.2; Yarn is vendored; CI should use the same runtime |
-| Expo SDK dependency drift / Hermes regression | Native runtime or build issues | T1.8: align dependencies or document exclusions; rerun doctor and native builds |
+| Expo SDK dependency drift / Hermes regression | Native runtime or build issues | T1.8 aligned the SDK; re-run `expo-doctor`, typecheck, tests, and native builds after future dependency changes |
 | Inherited CI needs upstream secrets | Release/EAS jobs fail or publish wrong identity | T1.2: configure owner credentials or disable/adapt workflows |
 | Upstream app IDs / EAS project | Store conflicts, signing confusion | T1.7: explicit identity decision before distribution |
 | GPL/CITATION mismatch | Legal/compliance ambiguity | Keep GPL-3.0; legal review before any license change |
@@ -565,10 +578,9 @@ the inherited CI.
 
 ## 8. Handoff notes
 
-**Start here:** T1.1 and T1.9 are complete; iOS and Android bundle CI are green on
-`main`. T1.8 is implemented in PR #4 and awaiting the iOS native build. After it merges,
-resolve T1.2's release/EAS policy, then T1.4 once the owner supplies the calendar-change
-requirements.
+**Start here:** T1.1, T1.8, and T1.9 are complete; iOS and Android bundle CI are green
+on `main`. Next, resolve T1.2's release/EAS policy, then T1.4 once the owner supplies the
+calendar-change requirements.
 
 **Repository rules**
 
@@ -587,9 +599,9 @@ requirements.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** merge T1.8 (PR #4) once its iOS native build is green, then
-resolve T1.2's release/EAS policy, then obtain the owner's requirements for T1.4 before
-any calendar implementation. Default-branch iOS run `41215432449` remains pending.
+**Next recommended step:** resolve T1.2's release/EAS policy, then obtain the owner's
+requirements for T1.4 before any calendar implementation. Default-branch iOS run
+`41215432449` remains pending.
 
 ---
 
