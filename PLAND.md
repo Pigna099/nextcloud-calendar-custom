@@ -507,15 +507,16 @@ CalDAV/ICS, widget, or navigation changes.
 - Validation: `tsc` pass; MonthDayView 20/20; calendar presentation tests 4/4;
   full Jest **108 suites / 987 tests** pass.
 
-**Device test build (2026-11-01, with refinements):**
+**Device test build (2026-11-01, with per-event colors):**
 
-- Manual workflow run `41266279841` (`device-ipa`) succeeded in **13m0s**.
-- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,973 bytes**.
-- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v3/NextcloudCalendar-unsigned.ipa`.
-- SHA-256: `f780db22e18addc4224afe1a64c195e8ef100fd77d965fb3829713efeea35d09`.
-- Includes event-color detail accents, ellipsis-free month labels, and current-calendar-color
-  propagation for cached events.
-- Previous test builds (v1 run `41222439211`, v2 run `41264222634`) are superseded.
+- Manual workflow run `41305281344` (`device-ipa`) succeeded in **17m12s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,215,202 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v4/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `a854c0e00642d3c37342be78fd33e5294d41e4efdcae1832c9a1b6e600035e18`.
+- Includes event-color detail accents, ellipsis-free month labels, calendar-color
+  propagation, and schema v8 per-event color overrides.
+- Previous test builds (v1 `41222439211`, v2 `41264222634`, v3 `41266279841`) are
+  superseded.
 - Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
   `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
 - Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
@@ -526,7 +527,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** Calendar color propagation implemented; new IPA build pending for visual verification.
+**Status:** Calendar color propagation and per-event colors implemented; v4 IPA ready for visual verification.
 
 ---
 
@@ -563,7 +564,7 @@ calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
 - Targeted color/form/parser/ICS tests: 121 passed.
 - Full `yarn jest --ci`: **108 suites / 993 tests** pass.
 
-**Status:** Implemented; new IPA build pending.
+**Status:** Implemented; v4 IPA ready for visual verification.
 
 ---
 
