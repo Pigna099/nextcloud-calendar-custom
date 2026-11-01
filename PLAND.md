@@ -507,16 +507,17 @@ CalDAV/ICS, widget, or navigation changes.
 - Validation: `tsc` pass; MonthDayView 20/20; calendar presentation tests 4/4;
   full Jest **108 suites / 987 tests** pass.
 
-**Device test build (2026-11-01, with per-event colors):**
+**Device test build (2026-11-01, with CSS3 per-event colors):**
 
-- Manual workflow run `41305281344` (`device-ipa`) succeeded in **17m12s**.
-- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,215,202 bytes**.
-- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v4/NextcloudCalendar-unsigned.ipa`.
-- SHA-256: `a854c0e00642d3c37342be78fd33e5294d41e4efdcae1832c9a1b6e600035e18`.
+- Manual workflow run `41308270097` (`device-ipa`) succeeded in **21m45s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,217,273 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v5/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `355004aa15c8388933f543b1e4e6cbe0be01c8b0396e74a1d3c7f545f156d787`.
 - Includes event-color detail accents, ellipsis-free month labels, calendar-color
-  propagation, and schema v8 per-event color overrides.
-- Previous test builds (v1 `41222439211`, v2 `41264222634`, v3 `41266279841`) are
-  superseded.
+  propagation, schema v8 per-event overrides, and CSS3 color-name serialization for
+  Nextcloud web compatibility.
+- Previous test builds (v1 `41222439211`, v2 `41264222634`, v3 `41266279841`,
+  v4 `41305281344`) are superseded.
 - Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
   `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
 - Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
@@ -527,7 +528,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** Calendar color propagation and per-event colors implemented; v5 IPA build pending.
+**Status:** Calendar color propagation and per-event colors implemented; v5 IPA ready.
 
 ---
 
@@ -568,8 +569,8 @@ calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
 - Verified against the Nextcloud Calendar web source: `changeCustomColor` writes the
   closest CSS3 color name, and the renderer resolves `COLOR` via CSS3 names.
 
-**Status:** Implemented; v5 IPA build pending. The v4 IPA wrote hex colors, which
-Nextcloud web ignored, so v4 does not satisfy the server-color requirement.
+**Status:** Implemented; v5 IPA ready. v5 writes CSS3 color names, so Nextcloud web
+displays the per-event color. v4 is superseded.
 
 ---
 
@@ -697,7 +698,8 @@ the inherited CI.
   were ignored by the online calendar.
 - Serialization now maps hex to the nearest CSS3 name, and parsing accepts names and hex.
 - Validation: `tsc` pass; targeted 122 tests; full **108 suites / 994 tests** pass.
-- Pending: v5 IPA build and manual visual verification.
+- v5 IPA built successfully; published as pre-release `test-ipa-v5` for installation.
+- Pending: manual visual verification on iPhone 13 mini.
 
 ---
 
