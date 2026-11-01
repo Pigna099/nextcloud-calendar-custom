@@ -153,6 +153,29 @@ describe('MonthDayView', () => {
     expect(getByTestId('month-week-5')).toBeTruthy();
   });
 
+  it('clips long event titles without an ellipsis', () => {
+    const longEvent: CalendarEvent = {
+      ...event,
+      summary: 'A very long event title that will not fit',
+    };
+    const { getByText } = render(
+      <MonthDayView
+        date={june10}
+        events={[longEvent]}
+        weekStartsOn={0}
+        jump={{ nonce: 0, target: june10 }}
+        onSelectDate={jest.fn()}
+        onMonthChange={jest.fn()}
+        onPressEvent={jest.fn()}
+        onPressCell={jest.fn()}
+      />
+    );
+
+    const title = getByText(longEvent.summary);
+    expect(title.props.ellipsizeMode).toBe('clip');
+    expect(title.props.numberOfLines).toBe(1);
+  });
+
   it('opens an event when its month-grid label is pressed', () => {
     const onPressEvent = jest.fn();
     const { getByTestId } = render(

@@ -304,6 +304,7 @@ const MonthGrid = memo(function MonthGrid({
                 >
                   <Text
                     numberOfLines={1}
+                    ellipsizeMode="clip"
                     allowFontScaling={false}
                     style={[styles.eventTitle, { color: ink.text }]}
                   >

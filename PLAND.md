@@ -478,6 +478,8 @@ CalDAV/ICS, widget, or navigation changes.
 - [x] Event colors and positions come from the existing event data.
 - [x] Multiple events are stacked in lanes; multi-day events span columns.
 - [x] Labels are clipped and overflow is reported with `+N`, preventing overlap.
+- [x] Long event titles show as many characters as fit without an ellipsis.
+- [x] Event-detail accents follow the event/calendar color.
 - [x] Event-detail and creation callbacks remain wired.
 - [x] Other calendar views, sync, storage, and data models are unchanged.
 - [ ] Manual visual comparison on an iPhone 13 mini simulator/device.
@@ -486,10 +488,20 @@ CalDAV/ICS, widget, or navigation changes.
 **Evidence:**
 
 - `yarn tsc --noEmit`: passed.
-- Targeted `yarn jest __tests__/components/MonthDayView.test.tsx --ci`: 19/19 passed.
-- Full `yarn jest --ci`: 107/107 suites, 982/982 tests passed.
+- Targeted `yarn jest __tests__/components/MonthDayView.test.tsx --ci`: 20/20 passed.
+- Full `yarn jest --ci`: 107/107 suites, 983/983 tests passed.
 - `expo export --platform ios`: passed (7.9 MB Hermes bundle).
-- No changes outside the month view component, its tests, and the manual iOS workflow.
+- No changes outside the month view, event-detail accents, the shared Button label-color
+  prop, tests, and the manual iOS workflow.
+
+**Refinements (2026-11-01):**
+
+- Event-detail edit/repeat/copy accents and Talk button now use the event color, with
+  contrast-aware icon/label colors.
+- Month-grid event labels use `ellipsizeMode="clip"` so long titles show as many
+  characters as fit, with no `...`.
+- Added an optional `labelColor` prop to the shared `Button` component.
+- Validation: `tsc` pass; MonthDayView 20/20; full Jest 983/983.
 
 **Device test build (2026-10-31):**
 
@@ -507,7 +519,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** IPA ready for manual iPhone 13 mini installation; visual verification pending.
+**Status:** Refinements implemented; updated IPA build pending for visual verification.
 
 ---
 
