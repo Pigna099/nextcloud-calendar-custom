@@ -501,7 +501,11 @@ CalDAV/ICS, widget, or navigation changes.
 - Month-grid event labels use `ellipsizeMode="clip"` so long titles show as many
   characters as fit, with no `...`.
 - Added an optional `labelColor` prop to the shared `Button` component.
-- Validation: `tsc` pass; MonthDayView 20/20; full Jest 983/983.
+- Calendar color changes now propagate to cached event rows at render time via
+  `applyCalendarPresentation`; the event detail also reads the current calendar color.
+  Added regression tests for this behavior.
+- Validation: `tsc` pass; MonthDayView 20/20; calendar presentation tests 4/4;
+  full Jest **108 suites / 987 tests** pass.
 
 **Device test build (2026-11-01, with refinements):**
 
@@ -521,7 +525,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** Updated IPA ready for manual iPhone 13 mini installation; visual verification pending.
+**Status:** Calendar color propagation implemented; new IPA build pending for visual verification.
 
 ---
 

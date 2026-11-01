@@ -191,7 +191,7 @@ export default function EventDetailScreen() {
     );
   }
 
-  const accent = event.color;
+  const accent = calendar?.color ?? event.color;
   const accentInk = contrastFor(accent).text;
 
   const timeStr = event.allDay
@@ -231,7 +231,7 @@ export default function EventDetailScreen() {
           ) : undefined}
         />
 
-        <View style={[styles.colorBar, { backgroundColor: event.color }]} />
+        <View style={[styles.colorBar, { backgroundColor: accent }]} />
 
         <ScrollView style={styles.flex} contentContainerStyle={[styles.content, { paddingBottom: 24 }]}>
           <Stack gap={20}>
