@@ -69,6 +69,19 @@ describe('parseIcsObjects', () => {
     expect(event.dtend.toISOString()).toBe('2026-06-01T15:00:00.000Z');
   });
 
+  it('uses a per-event COLOR override', () => {
+    const ics = sampleIcs.replace('SUMMARY:Team Meeting', 'SUMMARY:Team Meeting\nCOLOR:#e9322d');
+    const [event] = parseIcsObjects([{ ics, href: '/cal/event.ics' }], calMeta);
+    expect(event.color).toBe('#e9322d');
+    expect(event.colorOverride).toBe(true);
+  });
+
+  it('inherits the calendar color when the event has no COLOR', () => {
+    const [event] = parseIcsObjects([{ ics: sampleIcs, href: '/cal/event.ics' }], calMeta);
+    expect(event.color).toBe('#0082c9');
+    expect(event.colorOverride).toBe(false);
+  });
+
   it('parses attendees', () => {
     const [event] = parseIcsObjects([{ ics: sampleIcs, href: '/cal/event.ics' }], calMeta);
     expect(event.attendees).toHaveLength(1);

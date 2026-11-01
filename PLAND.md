@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 complete; T2.1 month view implemented (PR pending, manual visual check pending) |
+| Status | **Phase 0 complete**; Phase 1 complete; T2.1 + T2.2 implemented (IPA build/visual verification pending) |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -530,6 +530,43 @@ CalDAV/ICS, widget, or navigation changes.
 
 ---
 
+### T2.2 — Per-event colors — IMPLEMENTED (IPA build pending)
+
+**Owner-approved scope extension (2026-11-01):** allow an event to override its
+calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
+
+**Implementation:**
+
+- Parse and write `COLOR` on VEVENT/VTODO; accepted values are `#RGB` / `#RRGGBB`.
+- Added schema v8 `events.color_override` plus migration; `Event` model and mapper carry
+  the flag.
+- Event form now has a color swatch row; the first swatch means “use calendar color”.
+- Create, update, move, recurrence master/exception, and optimistic-write paths carry the
+  chosen color.
+- Month/week/day/agenda labels and event detail use the explicit event color; events
+  without an override follow the current calendar color.
+- When a calendar color changes, inherited events are updated while explicit overrides are
+  preserved.
+
+**Acceptance criteria:**
+
+- [x] Choose a color in create/edit event.
+- [x] Persist it to Nextcloud as ICS `COLOR`.
+- [x] Explicit colors survive calendar color changes.
+- [x] Events without an override continue to follow the calendar color.
+- [x] Color is carried through recurrence/update/move paths.
+- [ ] Manual install and visual verification on iPhone 13 mini.
+
+**Evidence:**
+
+- `yarn tsc --noEmit`: passed.
+- Targeted color/form/parser/ICS tests: 121 passed.
+- Full `yarn jest --ci`: **108 suites / 993 tests** pass.
+
+**Status:** Implemented; new IPA build pending.
+
+---
+
 ## 5. Validation strategy
 
 | Layer | Command / method | When |
@@ -644,6 +681,15 @@ the inherited CI.
 - No sync, storage, recurrence, CalDAV, widget, or data-model changes.
 - Pending: commit/push, PR checks, and manual visual verification on an iPhone 13 mini.
 
+### 2026-11-01 — Per-event colors (T2.2)
+
+- Added ICS `COLOR` parsing/serialization and schema v8 `color_override` migration.
+- Added a color swatch row to the event form; calendar color remains the default.
+- Event detail and all calendar views respect explicit event colors; inherited events
+  follow calendar color changes.
+- Validation: `tsc` pass; targeted 121 tests; full **108 suites / 993 tests** pass.
+- Pending: updated IPA build and manual visual verification.
+
 ---
 
 ## 7. Risks and mitigations
@@ -666,9 +712,9 @@ the inherited CI.
 ## 8. Handoff notes
 
 **Start here:** T1.1, T1.8, and T1.9 are complete; iOS and Android bundle CI are green
-on `main`. T1.4/T1.5 produced T2.1, which is implemented and awaiting PR/visual review.
-Next: merge T2.1 after manual iPhone 13 mini verification, then resolve T1.2's release/EAS
-policy and T1.7's app identity.
+on `main`. T1.4/T1.5 produced T2.1; T2.2 adds per-event colors. Both are implemented and
+awaiting the updated IPA / visual review. Next: build and verify the IPA, merge the PR,
+then resolve T1.2's release/EAS policy and T1.7's app identity.
 
 **Repository rules**
 
@@ -687,9 +733,9 @@ policy and T1.7's app identity.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** review T2.1 on an iPhone 13 mini simulator/device, then merge
-the PR if the visual density matches the reference. After that, resolve T1.2's release/EAS
-policy and T1.7's app identity. Default-branch iOS run `41215432449` is complete.
+**Next recommended step:** build the updated IPA with T2.1/T2.2, verify it on the iPhone
+13 mini, then merge the PR if the layout and colors match. After that, resolve T1.2's
+release/EAS policy and T1.7's app identity.
 
 ---
 

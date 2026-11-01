@@ -104,6 +104,13 @@ describe('buildIcs', () => {
     const ics = buildIcs({ ...base, location: '' });
     expect(ics).not.toContain('LOCATION');
   });
+
+  it('writes COLOR only when an explicit event color is provided', () => {
+    expect(buildIcs({ ...base, color: '#e9322d' })).toContain('COLOR:#e9322d\r\n');
+    expect(buildIcs(base)).not.toContain('COLOR:');
+    expect(buildAllDayIcs({ ...allDayBase, color: '#46ba61' }))
+      .toContain('COLOR:#46ba61\r\n');
+  });
 });
 
 describe('buildAllDayIcs', () => {

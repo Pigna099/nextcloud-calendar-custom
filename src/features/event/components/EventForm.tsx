@@ -1,10 +1,13 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform, KeyboardAvoidingView, Keyboard, useWindowDimensions, LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, KeyboardAvoidingView, Keyboard, useWindowDimensions, LayoutChangeEvent, TouchableOpacity } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'expo-router';
+import { Check } from 'lucide-react-native';
+import { contrastFor } from '@/features/calendar/utils/eventInk';
+import { EVENT_COLORS } from '../utils/eventColors';
 import { TalkToggle } from './TalkToggle';
 import { AttendeesField } from './AttendeesField';
 import { requestAlertPermission } from '@/features/notifications/scheduleAlerts';
@@ -22,6 +25,7 @@ dayjs.extend(localizedFormat);
 interface InitialValues {
   summary?: string;
   calendarId?: string;
+  color?: string;
   allDay?: boolean;
   dtstart?: Date;
   dtend?: Date;
@@ -67,6 +71,7 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     : `${language}-${use24h ? 'GB' : 'US'}`;
 
   const [summary, setSummary] = useState(initialValues?.summary ?? '');
+  const [color, setColor] = useState<string | undefined>(initialValues?.color);
   const writableCalendars = calendars.filter(isWritableCalendar);
   const storedDefault = useSettingsStore((s) =>
     account ? s.defaultCalendarByAccount[account.id] : undefined,
@@ -80,6 +85,8 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     writableCalendars.find((c) => c.slug.toLowerCase() === 'personal')?.id ??
     writableCalendars[0]?.id ?? '';
   const [calendarId, setCalendarId] = useState(defaultCalendarId);
+  const selectedCalendar = writableCalendars.find((c) => c.id === calendarId);
+  const defaultColor = selectedCalendar?.color ?? theme.colors.primary;
   const [allDay, setAllDay] = useState(initialValues?.allDay ?? false);
   const [dtstart, setDtstart] = useState(initialValues?.dtstart ?? defaultDate ?? new Date());
   const [dtend, setDtend] = useState(
@@ -206,7 +213,7 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     if (willAlert) void requestAlertPermission();
 
     onSubmit({
-      summary: summary.trim(), calendarId, dtstart, dtend, allDay,
+      summary: summary.trim(), calendarId, color, dtstart, dtend, allDay,
       description, location, attendees, withTalkRoom, talkRoomType,
       organizerEmail, organizerName, rrule, alarms,
     });
@@ -326,6 +333,50 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
           )}
         </Stack>
 
+        <Stack gap={8}>
+          <Typography variant="body2" color="secondary">{t('event.color')}</Typography>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.colorRow}
+          >
+            <TouchableOpacity
+              testID="event-color-default"
+              accessibilityRole="button"
+              accessibilityLabel={t('event.color')}
+              onPress={() => setColor(undefined)}
+              style={[
+                styles.colorSwatch,
+                { backgroundColor: defaultColor },
+                color === undefined && { borderColor: theme.colors.text },
+              ]}
+            >
+              {color === undefined && (
+                <Check size={16} color={contrastFor(defaultColor).text} />
+              )}
+            </TouchableOpacity>
+            {EVENT_COLORS.map((option) => (
+              <TouchableOpacity
+                key={option}
+                testID={`event-color-${option.replace('#', '')}`}
+                accessibilityRole="button"
+                accessibilityLabel={option}
+                onPress={() => setColor(option)}
+                style={[
+                  styles.colorSwatch,
+                  { backgroundColor: option },
+                  color === option && { borderColor: theme.colors.text },
+                ]}
+              >
+                {color === option && (
+                  <Check size={16} color={contrastFor(option).text} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Stack>
+
         <Stack direction="horizontal" vAlign="center" hAlign="center">
           <Typography variant="body2" color="secondary">{t('event.allDay')}</Typography>
           <View style={styles.pushRight}>
@@ -416,6 +467,16 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   multiline: { height: 80, textAlignVertical: 'top' },
   chipRow: { gap: 8 },
+  colorRow: { gap: 10, paddingVertical: 2 },
+  colorSwatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   grow: { flex: 1 },
   pushRight: { marginLeft: 'auto' },
   iosPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },

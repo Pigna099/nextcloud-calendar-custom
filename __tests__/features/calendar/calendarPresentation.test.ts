@@ -36,6 +36,15 @@ describe('applyCalendarPresentation', () => {
     expect(event.color).toBe('#0000ff');
   });
 
+  it('keeps an explicit per-event color', () => {
+    const [event] = applyCalendarPresentation(
+      [{ ...baseEvent, color: '#123456', colorOverride: true }],
+      [baseCalendar],
+      [],
+    );
+    expect(event.color).toBe('#123456');
+  });
+
   it('filters hidden calendars', () => {
     expect(applyCalendarPresentation([baseEvent], [baseCalendar], ['c1'])).toEqual([]);
   });

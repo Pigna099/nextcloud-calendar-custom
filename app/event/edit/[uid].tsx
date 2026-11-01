@@ -74,6 +74,7 @@ export default function EditEventScreen() {
   const initialValues = {
     summary: event.summary,
     calendarId: event.calendarId,
+    color: event.colorOverride ? event.color : undefined,
     allDay: event.allDay,
     dtstart: event.dtstart,
     dtend: event.dtend,

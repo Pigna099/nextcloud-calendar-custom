@@ -125,6 +125,7 @@ export interface BuildIcsParams extends ExtraLines {
     organizerEmail: string;
     organizerName: string;
     attendees: Attendee[];
+    color?: string;
     timezone: string;
     rrule?: RecurrenceRule;
     alarms?: number[];
@@ -142,6 +143,7 @@ export function buildIcs(params: BuildIcsParams): string {
         organizerEmail,
         organizerName,
         attendees,
+        color,
         timezone,
         rrule,
         alarms,
@@ -156,6 +158,7 @@ export function buildIcs(params: BuildIcsParams): string {
         `DTSTART;TZID=${timezone}:${localStamp(dtstart, timezone)}`,
         `DTEND;TZID=${timezone}:${localStamp(dtend, timezone)}`,
         ...textLines(summary, description, location),
+        ...(color ? [`COLOR:${color}`] : []),
         ...(rrule ? [rruleLine(rrule)] : []),
         ...schedulingLines(organizerName, organizerEmail, attendees),
         ...extraLines,
@@ -176,6 +179,7 @@ export function buildAllDayIcs(params: BuildAllDayIcsParams): string {
         organizerEmail,
         organizerName,
         attendees,
+        color,
         rrule,
         alarms,
         sequence = 0,
@@ -190,6 +194,7 @@ export function buildAllDayIcs(params: BuildAllDayIcsParams): string {
         `DTSTART;VALUE=DATE:${dateStamp(dtstart)}`,
         `DTEND;VALUE=DATE:${dateStamp(endExclusive)}`,
         ...textLines(summary, description, location),
+        ...(color ? [`COLOR:${color}`] : []),
         ...(rrule ? [rruleLine(rrule, true)] : []),
         ...schedulingLines(organizerName, organizerEmail, attendees),
         ...extraLines,
@@ -208,6 +213,7 @@ export function buildExceptionIcs(params: BuildIcsParams & { recurrenceId: Date;
         organizerEmail,
         organizerName,
         attendees,
+        color,
         timezone,
         recurrenceId,
         allDay = false,
@@ -235,6 +241,7 @@ export function buildExceptionIcs(params: BuildIcsParams & { recurrenceId: Date;
         `SEQUENCE:${sequence}`,
         ...dates,
         ...textLines(summary, description, location),
+        ...(color ? [`COLOR:${color}`] : []),
         ...schedulingLines(organizerName, organizerEmail, attendees),
         ...extraLines,
         ...alarmLines(alarms),

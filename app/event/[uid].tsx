@@ -191,7 +191,7 @@ export default function EventDetailScreen() {
     );
   }
 
-  const accent = calendar?.color ?? event.color;
+  const accent = event.colorOverride ? event.color : (calendar?.color ?? event.color);
   const accentInk = contrastFor(accent).text;
 
   const timeStr = event.allDay

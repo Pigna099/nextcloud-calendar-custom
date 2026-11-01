@@ -40,6 +40,7 @@ export function mapEventToShared(event: Event): CalendarEvent {
     dtend: new Date(event.end),
     allDay: !!event.allDay,
     color: event.color,
+    colorOverride: event.colorOverride ?? false,
     attendees: parseAttendees(event.attendees),
     organizerEmail: event.organizerEmail ?? undefined,
     talkUrl: event.talkUrl ?? undefined,

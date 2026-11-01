@@ -20,7 +20,9 @@ export function applyCalendarPresentation(
   return normalizeEvents(
     events.filter((e) => !hiddenCalendarIds.includes(e.calendarId)),
   ).map((e) => {
-    const color = colorByCalendar.get(e.calendarId) ?? e.color;
+    const color = e.colorOverride
+      ? e.color
+      : (colorByCalendar.get(e.calendarId) ?? e.color);
     const readOnly = nonEditableCalendarIds.has(e.calendarId);
     if (color === e.color && !readOnly) return e;
     return { ...e, color, ...(readOnly ? { readOnly: true } : {}) };

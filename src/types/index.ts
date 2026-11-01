@@ -58,6 +58,7 @@ export type CalendarEvent = {
     dtend: Date;
     allDay: boolean;
     color: string;
+    colorOverride?: boolean;
     attendees: Attendee[];
     organizerEmail?: string;
     talkUrl?: string;
@@ -72,6 +73,7 @@ export type CalendarEvent = {
 export type CreateEventInput = {
     summary: string;
     calendarId: string;
+    color?: string;
     dtstart: Date;
     dtend: Date;
     allDay: boolean;
