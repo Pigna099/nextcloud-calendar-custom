@@ -509,12 +509,13 @@ CalDAV/ICS, widget, or navigation changes.
 
 **Device test build (2026-11-01, with refinements):**
 
-- Manual workflow run `41264222634` (`device-ipa`) succeeded in **16m24s**.
-- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,782 bytes**.
-- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v2/NextcloudCalendar-unsigned.ipa`.
-- SHA-256: `68d45bb9e1685119500e05838f12cba6666300f1d407a7ab363afc931d6e395d`.
-- Includes the event-color detail accents and ellipsis-free month labels.
-- Previous test build (run `41222439211`, SHA `034a7ea4...`) is superseded.
+- Manual workflow run `41266279841` (`device-ipa`) succeeded in **13m0s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,973 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v3/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `f780db22e18addc4224afe1a64c195e8ef100fd77d965fb3829713efeea35d09`.
+- Includes event-color detail accents, ellipsis-free month labels, and current-calendar-color
+  propagation for cached events.
+- Previous test builds (v1 run `41222439211`, v2 run `41264222634`) are superseded.
 - Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
   `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
 - Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
