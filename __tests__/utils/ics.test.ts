@@ -105,11 +105,11 @@ describe('buildIcs', () => {
     expect(ics).not.toContain('LOCATION');
   });
 
-  it('writes COLOR only when an explicit event color is provided', () => {
-    expect(buildIcs({ ...base, color: '#e9322d' })).toContain('COLOR:#e9322d\r\n');
+  it('writes COLOR as a CSS3 name for Nextcloud compatibility', () => {
+    expect(buildIcs({ ...base, color: '#dc143c' })).toContain('COLOR:crimson\r\n');
     expect(buildIcs(base)).not.toContain('COLOR:');
-    expect(buildAllDayIcs({ ...allDayBase, color: '#46ba61' }))
-      .toContain('COLOR:#46ba61\r\n');
+    expect(buildAllDayIcs({ ...allDayBase, color: '#3cb371' }))
+      .toContain('COLOR:mediumseagreen\r\n');
   });
 });
 

@@ -527,7 +527,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** Calendar color propagation and per-event colors implemented; v4 IPA ready for visual verification.
+**Status:** Calendar color propagation and per-event colors implemented; v5 IPA build pending.
 
 ---
 
@@ -538,7 +538,9 @@ calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
 
 **Implementation:**
 
-- Parse and write `COLOR` on VEVENT/VTODO; accepted values are `#RGB` / `#RRGGBB`.
+- Parse and write `COLOR` on VEVENT/VTODO. Hex values are accepted, but serialization
+  writes the nearest **CSS3 color name** because the Nextcloud Calendar web app resolves
+  `COLOR` through its CSS3 name table (verified in the upstream web app source).
 - Added schema v8 `events.color_override` plus migration; `Event` model and mapper carry
   the flag.
 - Event form now has a color swatch row; the first swatch means “use calendar color”.
@@ -561,10 +563,13 @@ calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
 **Evidence:**
 
 - `yarn tsc --noEmit`: passed.
-- Targeted color/form/parser/ICS tests: 121 passed.
-- Full `yarn jest --ci`: **108 suites / 993 tests** pass.
+- Targeted color/form/parser/ICS tests: 122 passed.
+- Full `yarn jest --ci`: **108 suites / 994 tests** pass.
+- Verified against the Nextcloud Calendar web source: `changeCustomColor` writes the
+  closest CSS3 color name, and the renderer resolves `COLOR` via CSS3 names.
 
-**Status:** Implemented; v4 IPA ready for visual verification.
+**Status:** Implemented; v5 IPA build pending. The v4 IPA wrote hex colors, which
+Nextcloud web ignored, so v4 does not satisfy the server-color requirement.
 
 ---
 
@@ -688,8 +693,11 @@ the inherited CI.
 - Added a color swatch row to the event form; calendar color remains the default.
 - Event detail and all calendar views respect explicit event colors; inherited events
   follow calendar color changes.
-- Validation: `tsc` pass; targeted 121 tests; full **108 suites / 993 tests** pass.
-- Pending: updated IPA build and manual visual verification.
+- Discovered Nextcloud web resolves `COLOR` only through CSS3 color names; hex overrides
+  were ignored by the online calendar.
+- Serialization now maps hex to the nearest CSS3 name, and parsing accepts names and hex.
+- Validation: `tsc` pass; targeted 122 tests; full **108 suites / 994 tests** pass.
+- Pending: v5 IPA build and manual visual verification.
 
 ---
 

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { contrastFor } from '@/features/calendar/utils/eventInk';
-import { EVENT_COLORS } from '../utils/eventColors';
+import { EVENT_COLORS } from '@/utils/eventColors';
 import { TalkToggle } from './TalkToggle';
 import { AttendeesField } from './AttendeesField';
 import { requestAlertPermission } from '@/features/notifications/scheduleAlerts';

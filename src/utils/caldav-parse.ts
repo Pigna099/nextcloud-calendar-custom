@@ -1,6 +1,7 @@
 import ICAL from 'ical.js';
 import type { CalendarEvent, Attendee } from '@/types';
 import { yieldToUI } from '@/utils/scheduling';
+import { hexForColorName } from '@/utils/eventColors';
 import { isValidTimeZone, zonedWallTimeToUtc } from '@/utils/timezone';
 import { NO_ALARM_PROP, triggerToMinutes } from '@/features/notifications/alerts';
 
@@ -78,6 +79,10 @@ function readEventColor(
   const raw = comp.getFirstPropertyValue('color');
   if (typeof raw === 'string') {
     const value = raw.trim();
+    const named = hexForColorName(value);
+    if (named) {
+      return { color: named, colorOverride: true };
+    }
     if (/^#[0-9a-f]{6}$/i.test(value)) {
       return { color: value.toLowerCase(), colorOverride: true };
     }

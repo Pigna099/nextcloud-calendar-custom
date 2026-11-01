@@ -68,11 +68,11 @@ describe('EventForm calendar picker', () => {
       />,
     );
 
-    fireEvent.press(getByTestId('event-color-e9322d'));
+    fireEvent.press(getByTestId('event-color-dc143c'));
     act(() => formRef.current!.submit());
 
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ color: '#e9322d' }),
+      expect.objectContaining({ color: '#dc143c' }),
     );
   });
 

@@ -76,6 +76,13 @@ describe('parseIcsObjects', () => {
     expect(event.colorOverride).toBe(true);
   });
 
+  it('maps a CSS3 COLOR name to its hex value', () => {
+    const ics = sampleIcs.replace('SUMMARY:Team Meeting', 'SUMMARY:Team Meeting\nCOLOR:crimson');
+    const [event] = parseIcsObjects([{ ics, href: '/cal/event.ics' }], calMeta);
+    expect(event.color).toBe('#dc143c');
+    expect(event.colorOverride).toBe(true);
+  });
+
   it('inherits the calendar color when the event has no COLOR', () => {
     const [event] = parseIcsObjects([{ ics: sampleIcs, href: '/cal/event.ics' }], calMeta);
     expect(event.color).toBe('#0082c9');
