@@ -503,12 +503,14 @@ CalDAV/ICS, widget, or navigation changes.
 - Added an optional `labelColor` prop to the shared `Button` component.
 - Validation: `tsc` pass; MonthDayView 20/20; full Jest 983/983.
 
-**Device test build (2026-10-31):**
+**Device test build (2026-11-01, with refinements):**
 
-- Manual workflow run `41222439211` (`device-ipa`) succeeded in **20m5s**.
-- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,584 bytes**.
-- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa/NextcloudCalendar-unsigned.ipa`.
-- SHA-256: `034a7ea4b6d50bb444ed3c8731407db1780371a0d295189334d494e911241928`.
+- Manual workflow run `41264222634` (`device-ipa`) succeeded in **16m24s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,213,782 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v2/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `68d45bb9e1685119500e05838f12cba6666300f1d407a7ab363afc931d6e395d`.
+- Includes the event-color detail accents and ellipsis-free month labels.
+- Previous test build (run `41222439211`, SHA `034a7ea4...`) is superseded.
 - Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
   `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
 - Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
@@ -519,7 +521,7 @@ CalDAV/ICS, widget, or navigation changes.
   the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
  /no-widget sideload build may be needed if signing fails.
 
-**Status:** Refinements implemented; updated IPA build pending for visual verification.
+**Status:** Updated IPA ready for manual iPhone 13 mini installation; visual verification pending.
 
 ---
 
