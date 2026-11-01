@@ -76,6 +76,7 @@
     "calendarVisibility": "Mostra {{name}}"
   },
   "event": {
+    "color": "Colore",
     "titleLabel": "Titolo *",
     "titlePlaceholder": "Titolo dell'evento",
     "calendar": "Calendario",

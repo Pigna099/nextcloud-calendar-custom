@@ -61,6 +61,7 @@ export function writeEvent(row: Event, ev: CalendarEvent): void {
     row.end = ev.dtend.getTime();
     row.allDay = ev.allDay;
     row.color = ev.color;
+    row.colorOverride = ev.colorOverride ?? false;
     row.attendees = JSON.stringify(ev.attendees ?? []);
     row.organizerEmail = ev.organizerEmail ?? undefined;
     row.talkUrl = ev.talkUrl ?? undefined;
@@ -95,6 +96,7 @@ function eventUnchanged(row: Event, ev: CalendarEvent): boolean {
         (row.location ?? undefined) === (ev.location ?? undefined) &&
         !!row.allDay === ev.allDay &&
         row.color === ev.color &&
+        (!!row.colorOverride) === (!!ev.colorOverride) &&
         row.calendarId === ev.calendarId &&
         row.href === ev.href &&
         (row.rrule ?? undefined) === (ev.rrule ?? undefined) &&
@@ -123,8 +125,23 @@ export async function syncCalendars(account: Account): Promise<CalendarMeta[]> {
             const found = byRemote.get(c.id);
             if (!found) {
                 ops.push(calendars.prepareCreate((r: Calendar) => writeCalendar(r, c, account.id)));
-            } else if (!calendarUnchanged(found, c)) {
-                ops.push(found.prepareUpdate((r: Calendar) => writeCalendar(r, c, account.id)));
+            } else {
+                if (!calendarUnchanged(found, c)) {
+                    ops.push(found.prepareUpdate((r: Calendar) => writeCalendar(r, c, account.id)));
+                }
+                if (found.color !== c.color) {
+                    const inherited = await events
+                        .query(
+                            Q.where('account_id', account.id),
+                            Q.where('calendar_id', c.id),
+                        )
+                        .fetch();
+                    for (const ev of inherited) {
+                        if (!ev.colorOverride) {
+                            ops.push(ev.prepareUpdate((r: Event) => { r.color = c.color; }));
+                        }
+                    }
+                }
             }
         }
 

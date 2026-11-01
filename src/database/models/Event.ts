@@ -21,6 +21,7 @@ export default class Event extends Model {
   @field('end') end: number;
   @field('all_day') allDay?: boolean;
   @field('color') color: string;
+  @field('color_override') colorOverride?: boolean;
   @field('attendees') attendees?: string;
   @field('organizer_email') organizerEmail?: string;
   @field('talk_url') talkUrl?: string;

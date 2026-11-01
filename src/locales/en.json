@@ -76,6 +76,7 @@
     "calendarVisibility": "Show {{name}}"
   },
   "event": {
+    "color": "Color",
     "titleLabel": "Title *",
     "titlePlaceholder": "Event title",
     "calendar": "Calendar",

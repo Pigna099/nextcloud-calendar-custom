@@ -56,6 +56,45 @@ describe('EventForm calendar picker', () => {
     expect(queryByText(LOCKED_CAPTION)).toBeNull();
   });
 
+  it('submits an explicit per-event color', () => {
+    const formRef = createRef<EventFormHandle>();
+    const onSubmit = jest.fn();
+    const { getByTestId } = render(
+      <EventForm
+        ref={formRef}
+        {...baseProps}
+        onSubmit={onSubmit}
+        initialValues={{ summary: 'Colored event' }}
+      />,
+    );
+
+    fireEvent.press(getByTestId('event-color-dc143c'));
+    act(() => formRef.current!.submit());
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ color: '#dc143c' }),
+    );
+  });
+
+  it('leaves the color undefined when the calendar default is selected', () => {
+    const formRef = createRef<EventFormHandle>();
+    const onSubmit = jest.fn();
+    render(
+      <EventForm
+        ref={formRef}
+        {...baseProps}
+        onSubmit={onSubmit}
+        initialValues={{ summary: 'Default color event' }}
+      />,
+    );
+
+    act(() => formRef.current!.submit());
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ color: undefined }),
+    );
+  });
+
   it('excludes calendars that cannot hold events (e.g. Deck boards) from the picker', () => {
     const withDeck: CalendarMeta[] = [
       ...calendars,

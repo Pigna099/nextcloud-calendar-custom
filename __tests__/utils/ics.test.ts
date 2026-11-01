@@ -104,6 +104,13 @@ describe('buildIcs', () => {
     const ics = buildIcs({ ...base, location: '' });
     expect(ics).not.toContain('LOCATION');
   });
+
+  it('writes COLOR as a CSS3 name for Nextcloud compatibility', () => {
+    expect(buildIcs({ ...base, color: '#dc143c' })).toContain('COLOR:crimson\r\n');
+    expect(buildIcs(base)).not.toContain('COLOR:');
+    expect(buildAllDayIcs({ ...allDayBase, color: '#3cb371' }))
+      .toContain('COLOR:mediumseagreen\r\n');
+  });
 });
 
 describe('buildAllDayIcs', () => {

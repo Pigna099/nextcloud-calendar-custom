@@ -76,6 +76,7 @@
     "calendarVisibility": "Показывать «{{name}}»"
   },
   "event": {
+    "color": "Цвет",
     "titleLabel": "Название *",
     "titlePlaceholder": "Название события",
     "calendar": "Календарь",

@@ -1,6 +1,7 @@
 import ICAL from 'ical.js';
 import type { CalendarEvent, Attendee } from '@/types';
 import { yieldToUI } from '@/utils/scheduling';
+import { hexForColorName } from '@/utils/eventColors';
 import { isValidTimeZone, zonedWallTimeToUtc } from '@/utils/timezone';
 import { NO_ALARM_PROP, triggerToMinutes } from '@/features/notifications/alerts';
 
@@ -71,9 +72,32 @@ function organizerEmailOf(vevent: ICAL.Component): string | undefined {
   return prop ? (prop.getFirstValue() as string).replace(/^mailto:/i, '') : undefined;
 }
 
+function readEventColor(
+  comp: ICAL.Component,
+  fallback: string,
+): { color: string; colorOverride: boolean } {
+  const raw = comp.getFirstPropertyValue('color');
+  if (typeof raw === 'string') {
+    const value = raw.trim();
+    const named = hexForColorName(value);
+    if (named) {
+      return { color: named, colorOverride: true };
+    }
+    if (/^#[0-9a-f]{6}$/i.test(value)) {
+      return { color: value.toLowerCase(), colorOverride: true };
+    }
+    if (/^#[0-9a-f]{3}$/i.test(value)) {
+      const expanded = `#${value.slice(1).split('').map((c) => c + c).join('')}`;
+      return { color: expanded.toLowerCase(), colorOverride: true };
+    }
+  }
+  return { color: fallback, colorOverride: false };
+}
+
 type OverridableFields = Pick<
   CalendarEvent,
   'summary' | 'description' | 'location' | 'talkUrl' | 'attendees' | 'organizerEmail' | 'alarms'
+  | 'color' | 'colorOverride'
 >;
 
 function exceptionFields(vevent: ICAL.Component): Partial<OverridableFields> {
@@ -98,6 +122,12 @@ function exceptionFields(vevent: ICAL.Component): Partial<OverridableFields> {
 
   const alarms = alarmMinutesList(vevent);
   if (alarms !== undefined) fields.alarms = alarms;
+
+  const color = readEventColor(vevent, '');
+  if (color.colorOverride) {
+    fields.color = color.color;
+    fields.colorOverride = true;
+  }
 
   return fields;
 }
@@ -212,6 +242,8 @@ function parseVtodo(
     dtend = new Date(dtstart.getTime() + DEFAULT_TODO_DURATION_MS);
   }
 
+  const color = readEventColor(vtodo, meta.color);
+
   return {
     uid,
     href,
@@ -223,7 +255,8 @@ function parseVtodo(
     dtstart,
     dtend,
     allDay,
-    color: meta.color,
+    color: color.color,
+    colorOverride: color.colorOverride,
     attendees: [],
     isRecurring: false,
     alarms: alarmMinutesList(vtodo),
@@ -276,6 +309,8 @@ export function parseIcsItem(
         ? rruleProp.toICALString()
         : undefined;
 
+      const color = readEventColor(vevent, meta.color);
+
       const base = {
         uid: icalEvent.uid,
         href,
@@ -285,7 +320,8 @@ export function parseIcsItem(
         description: icalEvent.description ?? undefined,
         location,
         allDay: icalEvent.startDate.isDate,
-        color: meta.color,
+        color: color.color,
+        colorOverride: color.colorOverride,
         attendees,
         organizerEmail,
         talkUrl,
@@ -399,8 +435,8 @@ export function extractSequence(ics: string): number {
 
 const WRITER_MANAGED_PROPS = new Set([
   'uid', 'dtstamp', 'sequence', 'dtstart', 'dtend', 'summary', 'description',
-  'location', 'rrule', 'organizer', 'attendee', 'recurrence-id', 'last-modified', 'prodid',
-  NO_ALARM_PROP.toLowerCase(),
+  'location', 'color', 'rrule', 'organizer', 'attendee', 'recurrence-id', 'last-modified',
+  'prodid', NO_ALARM_PROP.toLowerCase(),
 ]);
 
 export function extractExtraVeventLines(ics: string): string[] {

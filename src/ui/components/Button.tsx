@@ -13,6 +13,7 @@ type Alignment = 'start' | 'center' | 'end';
 interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: Variant;
   color?: Color;
+  labelColor?: Color | string;
   size?: Size;
   icon?: React.ReactNode;
   title?: string;
@@ -37,6 +38,7 @@ const JUSTIFY = { start: 'flex-start', center: 'center', end: 'flex-end' } as co
 function Button({
   variant = 'primary',
   color = 'primary',
+  labelColor,
   size = 'medium',
   icon,
   title,
@@ -64,7 +66,9 @@ function Button({
     : variant === 'secondary' ? colors.border
     : variant === 'ghost' ? accent
     : 'transparent';
-  const labelColor = filled ? 'light' : color === 'danger' ? 'danger' : color === 'text' ? 'text' : 'primary';
+  const resolvedLabelColor = labelColor ?? (
+    filled ? 'light' : color === 'danger' ? 'danger' : color === 'text' ? 'text' : 'primary'
+  );
 
   const label = title ?? children;
 
@@ -91,12 +95,12 @@ function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={filled ? '#ffffff' : accent} />
+        <ActivityIndicator color={filled ? (labelColor ?? '#ffffff') : accent} />
       ) : (
         <>
           {icon ? <View>{icon}</View> : null}
           {label != null ? (
-            <Typography variant="button" color={labelColor}>
+            <Typography variant="button" color={resolvedLabelColor}>
               {label}
             </Typography>
           ) : null}

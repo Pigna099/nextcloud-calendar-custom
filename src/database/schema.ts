@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const mySchema = appSchema({
-  version: 7,
+  version: 8,
   tables: [
     tableSchema({
       name: 'events',
@@ -17,6 +17,7 @@ export const mySchema = appSchema({
         { name: 'end', type: 'number' },
         { name: 'all_day', type: 'boolean', isOptional: true },
         { name: 'color', type: 'string' },
+        { name: 'color_override', type: 'boolean', isOptional: true },
         { name: 'attendees', type: 'string', isOptional: true },
         { name: 'organizer_email', type: 'string', isOptional: true },
         { name: 'talk_url', type: 'string', isOptional: true },

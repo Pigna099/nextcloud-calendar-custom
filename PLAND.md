@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 baseline/CI green; dependency alignment complete (PR #4) |
+| Status | **Phase 0 complete**; Phase 1 complete; T2.1 + T2.2 implemented (IPA build/visual verification pending) |
 | Last updated | 2026-10-31 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -257,45 +257,35 @@ push to upstream; typecheck/tests after any merge.
 
 ---
 
-### T1.4 — Requirements intake for calendar customizations — BLOCKED (owner input)
+### T1.4 — Requirements intake for calendar customizations — DONE (2026-10-31)
 
 **Goal:** Turn the owner's intended calendar changes into an approved, testable spec
 before implementation.
 
-**Required input from owner:**
+**Approved brief:** Google Calendar-style month view, optimized for iPhone 13 mini
+(375 x 812 logical points).
 
-- The user-facing problem and target users.
-- Desired behavior in each calendar view (month/week/3-day/day/agenda).
-- Whether changes affect event creation/editing, recurrence, sync, widgets,
-  notifications, or account handling.
-- Visual/UX references or acceptance examples.
-- Priority and target release.
+- Full six-week month grid on one screen; seven equal columns, Monday-Sunday.
+- Date numbers at the top of each cell.
+- Compact colored event labels directly inside day cells, stacked vertically.
+- Multi-day events as continuous horizontal bars across adjacent days.
+- Preserve titles, colors, ordering, navigation, event detail, and creation flows.
+- UI-only: no changes to sync, storage, recurrence, scheduling, or data models.
+- No new dependencies; no unrelated screens; preserve branding.
+- Screenshot supplied as the primary visual reference.
 
-**Acceptance criteria:**
+**Acceptance criteria:** recorded in T2.1 below.
 
-- Written user stories with explicit acceptance criteria.
-- UX states for empty/loading/error/offline cases.
-- Data-model and CalDAV/ICS impact assessed.
-- Test plan (unit + E2E + manual) agreed.
-- Tickets split so each can ship independently.
-
-**Dependencies:** T1.1 and owner requirements. **Do not invent feature requirements or
-start UI/sync changes before this ticket is approved.**
+**Dependencies:** T1.1 and owner requirements.
 
 ---
 
-### T1.5 — Feature implementation breakdown — BLOCKED
+### T1.5 — Feature implementation breakdown — DONE (2026-10-31)
 
 **Goal:** Convert the approved T1.4 spec into small, independent implementation tickets.
 
-**Acceptance criteria:**
-
-- Each ticket has one responsibility, acceptance criteria, validation commands, and
-  rollback notes.
-- Tickets identify affected layers: route/UI, feature logic, database schema/migration,
-  CalDAV/ICS, sync, widgets/notifications, i18n, tests.
-- Dependencies and ordering are explicit.
-- No ticket combines schema migration, UI redesign, and release changes.
+**Result:** One UI-only ticket, **T2.1**, touching the month view component and its tests.
+No schema, sync, CalDAV/ICS, recurrence, notification, or widget changes are needed.
 
 **Dependencies:** T1.4.
 
@@ -457,6 +447,133 @@ not a failure; pin newer action majors in a maintenance ticket if desired.
 
 ---
 
+### T2.1 — Google Calendar-style month view — IMPLEMENTED (PR pending)
+
+**Goal:** Reproduce the supplied Google Calendar month layout on the existing Nextcloud
+data, optimized for iPhone 13 mini (375 x 812 logical points).
+
+**Scope:** UI-only changes in `src/features/calendar/components/MonthDayView.tsx` and
+`__tests__/components/MonthDayView.test.tsx`. No sync, storage, event model, recurrence,
+CalDAV/ICS, widget, or navigation changes.
+
+**Implementation:**
+
+- Fixed six-week grid with seven equal columns and adjacent-month days dimmed/disabled.
+- Date numbers rendered at the top of each cell.
+- Events rendered directly in cells as compact colored bars; titles are single-line and
+  clipped.
+- Multi-day events use a per-week lane layout with continuous horizontal bars and
+  continuation-aware corner radii.
+- Overlapping events are assigned lanes; overflow shows `+N` rather than clipping or
+  overlapping labels.
+- Removed the old selected-day event list and the `44%` fixed grid height. The month grid
+  now uses all available vertical space with no vertical scrolling.
+- Existing `onSelectDate`, `onPressCell`, `onPressEvent`, pager, and jump behavior are
+  preserved.
+
+**Acceptance criteria:**
+
+- [x] Full six-week grid rendered in one screen without a vertical ScrollView.
+- [x] Event titles are visible in day cells without selecting a date.
+- [x] Event colors and positions come from the existing event data.
+- [x] Multiple events are stacked in lanes; multi-day events span columns.
+- [x] Labels are clipped and overflow is reported with `+N`, preventing overlap.
+- [x] Long event titles show as many characters as fit without an ellipsis.
+- [x] Event-detail accents follow the event/calendar color.
+- [x] Event-detail and creation callbacks remain wired.
+- [x] Other calendar views, sync, storage, and data models are unchanged.
+- [ ] Manual visual comparison on an iPhone 13 mini simulator/device.
+- [ ] Visual density comparison with the supplied screenshot.
+
+**Evidence:**
+
+- `yarn tsc --noEmit`: passed.
+- Targeted `yarn jest __tests__/components/MonthDayView.test.tsx --ci`: 20/20 passed.
+- Full `yarn jest --ci`: 107/107 suites, 983/983 tests passed.
+- `expo export --platform ios`: passed (7.9 MB Hermes bundle).
+- No changes outside the month view, event-detail accents, the shared Button label-color
+  prop, tests, and the manual iOS workflow.
+
+**Refinements (2026-11-01):**
+
+- Event-detail edit/repeat/copy accents and Talk button now use the event color, with
+  contrast-aware icon/label colors.
+- Month-grid event labels use `ellipsizeMode="clip"` so long titles show as many
+  characters as fit, with no `...`.
+- Added an optional `labelColor` prop to the shared `Button` component.
+- Calendar color changes now propagate to cached event rows at render time via
+  `applyCalendarPresentation`; the event detail also reads the current calendar color.
+  Added regression tests for this behavior.
+- Validation: `tsc` pass; MonthDayView 20/20; calendar presentation tests 4/4;
+  full Jest **108 suites / 987 tests** pass.
+
+**Device test build (2026-11-01, with CSS3 per-event colors):**
+
+- Manual workflow run `41308270097` (`device-ipa`) succeeded in **21m45s**.
+- Artifact: `NextcloudCalendar-unsigned-ipa`; IPA is **20,217,273 bytes**.
+- Local path: `/home/dante/Downloads/nextcloud-calendar-ipa-v5/NextcloudCalendar-unsigned.ipa`.
+- SHA-256: `355004aa15c8388933f543b1e4e6cbe0be01c8b0396e74a1d3c7f545f156d787`.
+- Includes event-color detail accents, ellipsis-free month labels, calendar-color
+  propagation, schema v8 per-event overrides, and CSS3 color-name serialization for
+  Nextcloud web compatibility.
+- Previous test builds (v1 `41222439211`, v2 `41264222634`, v3 `41266279841`,
+  v4 `41305281344`) are superseded.
+- Structure: `Payload/NextcloudCalendar.app`, **Mach-O 64-bit arm64**, no
+  `_CodeSignature`, no `embedded.mobileprovision` (unsigned).
+- Bundle ID: `com.soluce.nextcloud-calendar`; version `1.9.2`; minimum iOS `16.4`.
+- Includes widget extension `com.soluce.nextcloud-calendar.ExpoWidgetsTarget`.
+- The bundled Hermes `main.jsbundle` contains the new `month-week-*` / `month-event-*`
+  view markers.
+- SideStore/AltStore: structurally suitable for re-signing; free Apple IDs may reject
+  the App Group/widget entitlements or the upstream bundle ID (3011). A unique-bundle-ID
+ /no-widget sideload build may be needed if signing fails.
+
+**Status:** Calendar color propagation and per-event colors implemented; v5 IPA ready.
+
+---
+
+### T2.2 — Per-event colors — IMPLEMENTED (IPA build pending)
+
+**Owner-approved scope extension (2026-11-01):** allow an event to override its
+calendar color, persisted in Nextcloud as the iCalendar `COLOR` property.
+
+**Implementation:**
+
+- Parse and write `COLOR` on VEVENT/VTODO. Hex values are accepted, but serialization
+  writes the nearest **CSS3 color name** because the Nextcloud Calendar web app resolves
+  `COLOR` through its CSS3 name table (verified in the upstream web app source).
+- Added schema v8 `events.color_override` plus migration; `Event` model and mapper carry
+  the flag.
+- Event form now has a color swatch row; the first swatch means “use calendar color”.
+- Create, update, move, recurrence master/exception, and optimistic-write paths carry the
+  chosen color.
+- Month/week/day/agenda labels and event detail use the explicit event color; events
+  without an override follow the current calendar color.
+- When a calendar color changes, inherited events are updated while explicit overrides are
+  preserved.
+
+**Acceptance criteria:**
+
+- [x] Choose a color in create/edit event.
+- [x] Persist it to Nextcloud as ICS `COLOR`.
+- [x] Explicit colors survive calendar color changes.
+- [x] Events without an override continue to follow the calendar color.
+- [x] Color is carried through recurrence/update/move paths.
+- [ ] Manual install and visual verification on iPhone 13 mini.
+
+**Evidence:**
+
+- `yarn tsc --noEmit`: passed.
+- Targeted color/form/parser/ICS tests: 122 passed.
+- Full `yarn jest --ci`: **108 suites / 994 tests** pass.
+- Verified against the Nextcloud Calendar web source: `changeCustomColor` writes the
+  closest CSS3 color name, and the renderer resolves `COLOR` via CSS3 names.
+
+**Status:** Implemented; v5 IPA ready. v5 writes CSS3 color names, so Nextcloud web
+displays the per-event color. v4 is superseded.
+
+---
+
 ## 5. Validation strategy
 
 | Layer | Command / method | When |
@@ -560,6 +677,30 @@ the inherited CI.
 - PR #4 merged as `4409574`; iOS native build succeeded in **31m34s** (run
   `41216514576`).
 
+### 2026-10-31 — T2.1 Google Calendar-style month view
+
+- Implemented the approved month-view brief in `MonthDayView.tsx` and updated its tests.
+- Fixed six-week grid, compact date numbers, in-cell event bars, per-week lanes,
+  multi-day spanning bars, `+N` overflow, and full-height flex layout without scrolling.
+- Removed the old selected-day list and the `44%` fixed grid height.
+- Validation: `tsc` pass; targeted 19/19 tests; full **107 suites / 982 tests** pass;
+  iOS JS export pass (7.9 MB Hermes bundle).
+- No sync, storage, recurrence, CalDAV, widget, or data-model changes.
+- Pending: commit/push, PR checks, and manual visual verification on an iPhone 13 mini.
+
+### 2026-11-01 — Per-event colors (T2.2)
+
+- Added ICS `COLOR` parsing/serialization and schema v8 `color_override` migration.
+- Added a color swatch row to the event form; calendar color remains the default.
+- Event detail and all calendar views respect explicit event colors; inherited events
+  follow calendar color changes.
+- Discovered Nextcloud web resolves `COLOR` only through CSS3 color names; hex overrides
+  were ignored by the online calendar.
+- Serialization now maps hex to the nearest CSS3 name, and parsing accepts names and hex.
+- Validation: `tsc` pass; targeted 122 tests; full **108 suites / 994 tests** pass.
+- v5 IPA built successfully; published as pre-release `test-ipa-v5` for installation.
+- Pending: manual visual verification on iPhone 13 mini.
+
 ---
 
 ## 7. Risks and mitigations
@@ -582,8 +723,9 @@ the inherited CI.
 ## 8. Handoff notes
 
 **Start here:** T1.1, T1.8, and T1.9 are complete; iOS and Android bundle CI are green
-on `main`. Next, resolve T1.2's release/EAS policy, then T1.4 once the owner supplies the
-calendar-change requirements.
+on `main`. T1.4/T1.5 produced T2.1; T2.2 adds per-event colors. Both are implemented and
+awaiting the updated IPA / visual review. Next: build and verify the IPA, merge the PR,
+then resolve T1.2's release/EAS policy and T1.7's app identity.
 
 **Repository rules**
 
@@ -602,9 +744,9 @@ calendar-change requirements.
 - `adb` and Maestro are still absent; Java 21 and Docker are present.
 - The repository is fully published; local baseline checks pass.
 
-**Next recommended step:** resolve T1.2's release/EAS policy, then obtain the owner's
-requirements for T1.4 before any calendar implementation. Default-branch iOS run
-`41215432449` remains pending.
+**Next recommended step:** build the updated IPA with T2.1/T2.2, verify it on the iPhone
+13 mini, then merge the PR if the layout and colors match. After that, resolve T1.2's
+release/EAS policy and T1.7's app identity.
 
 ---
 

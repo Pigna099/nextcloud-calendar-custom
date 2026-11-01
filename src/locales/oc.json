@@ -76,6 +76,7 @@
     "calendarVisibility": "Afichar {{name}}"
   },
   "event": {
+    "color": "Color",
     "titleLabel": "Títol *",
     "titlePlaceholder": "Títol de l'eveniment",
     "calendar": "Calendari",

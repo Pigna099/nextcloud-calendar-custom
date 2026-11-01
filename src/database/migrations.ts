@@ -3,6 +3,15 @@ import { schemaMigrations, addColumns, unsafeExecuteSql } from '@nozbe/watermelo
 export const migrations = schemaMigrations({
   migrations: [
     {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: 'events',
+          columns: [{ name: 'color_override', type: 'boolean', isOptional: true }],
+        }),
+      ],
+    },
+    {
       toVersion: 7,
       steps: [
         addColumns({

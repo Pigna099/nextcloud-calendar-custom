@@ -13,6 +13,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { useTranslation } from 'react-i18next';
 import { useEventByUid } from '@/database/useEventByUid';
 import { parseRrule } from '@/features/calendar/utils/parseRrule';
+import { contrastFor } from '@/features/calendar/utils/eventInk';
 import { formatRecurrenceRule } from '@/features/event/utils/recurrencePattern';
 import { useCalendars } from '@/hooks/useCalendars';
 import { useAccounts } from '@/hooks/useAccounts';
@@ -190,6 +191,9 @@ export default function EventDetailScreen() {
     );
   }
 
+  const accent = event.colorOverride ? event.color : (calendar?.color ?? event.color);
+  const accentInk = contrastFor(accent).text;
+
   const timeStr = event.allDay
     ? (dayjs(event.dtstart).isSame(event.dtend, 'day')
         ? t('event.allDayTime')
@@ -222,12 +226,12 @@ export default function EventDetailScreen() {
           onBack={() => goBackOrHome(router)}
           right={canEdit ? (
             <IconButton testID="event-detail-edit" glass round size={40} onPress={handleEdit} accessibilityLabel={t('event.edit')}>
-              <Pencil size={20} color={theme.colors.primary} />
+              <Pencil size={20} color={accent} />
             </IconButton>
           ) : undefined}
         />
 
-        <View style={[styles.colorBar, { backgroundColor: event.color }]} />
+        <View style={[styles.colorBar, { backgroundColor: accent }]} />
 
         <ScrollView style={styles.flex} contentContainerStyle={[styles.content, { paddingBottom: 24 }]}>
           <Stack gap={20}>
@@ -235,7 +239,7 @@ export default function EventDetailScreen() {
               <Typography variant="h3">{event.summary}</Typography>
               {event.isRecurring && (
                 <Stack direction="horizontal" gap={6}>
-                  <Repeat size={16} color={theme.colors.primary} />
+                  <Repeat size={16} color={accent} />
                   <Typography variant="body2" color="secondary" style={{ flex: 1 }}>
                     {recurrenceLabel ?? t('event.recurring')}
                   </Typography>
@@ -282,7 +286,7 @@ export default function EventDetailScreen() {
                         onPress={handleCopyLocation}
                       >
                         {copied
-                          ? <Check size={18} color={theme.colors.primary} />
+                          ? <Check size={18} color={accent} />
                           : <Copy size={18} color={theme.colors.textSecondary} />}
                       </IconButton>
                     </Stack>
@@ -313,7 +317,9 @@ export default function EventDetailScreen() {
                 testID="event-detail-join"
                 variant="primary"
                 title={t('event.joinTalkRoom')}
-                icon={<Video size={18} color="#fff" />}
+                labelColor={accentInk}
+                style={{ backgroundColor: accent, borderColor: accent }}
+                icon={<Video size={18} color={accentInk} />}
                 onPress={() => openTalkRoom(event.talkUrl!, talkOpenMode)}
                 onLongPress={() => promptTalkRoomOpen(event.talkUrl!)}
               />

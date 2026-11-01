@@ -7,10 +7,9 @@ import { useAccountStore } from '@/stores/accountStore';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { useActiveAccount } from '@/hooks/useAccounts';
 import { useCalendars } from '@/hooks/useCalendars';
-import { normalizeEvents } from '@/utils/normalizeEvent';
 import { monthRange } from '../utils/range';
 import { AGENDA_FUTURE_DAYS, AGENDA_PAST_DAYS } from '../utils/agendaSections';
-import type { CalendarEvent } from '@/types';
+import { applyCalendarPresentation } from '../utils/calendarPresentation';
 
 export function useCalendarData(date: Date, agendaEnabled = false) {
   const activeAccountId = useAccountStore((s) => s.activeAccountId);
@@ -60,16 +59,11 @@ export function useCalendarData(date: Date, agendaEnabled = false) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAccount?.id, calendars, start.getTime(), end.getTime()]);
 
-  const prepare = useMemo(() => {
-    const nonEditableCalendarIds = new Set(
-      calendars.filter((c) => c.isReadOnly || c.isSubscribed).map((c) => c.id),
-    );
-    return (events: CalendarEvent[]) => normalizeEvents(
-      events.filter((e) => !hiddenCalendarIds.includes(e.calendarId)),
-    ).map((e) =>
-      nonEditableCalendarIds.has(e.calendarId) ? { ...e, readOnly: true } : e,
-    );
-  }, [hiddenCalendarIds, calendars]);
+  const prepare = useMemo(
+    () => (events: Parameters<typeof applyCalendarPresentation>[0]) =>
+      applyCalendarPresentation(events, calendars, hiddenCalendarIds),
+    [hiddenCalendarIds, calendars],
+  );
   const allEvents = useMemo(() => prepare(dbEvents), [prepare, dbEvents]);
   const agendaEvents = useMemo(() => prepare(agendaDbEvents), [prepare, agendaDbEvents]);
 

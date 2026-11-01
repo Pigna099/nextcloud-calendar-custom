@@ -33,6 +33,7 @@ function applyPatch(row: Event, patch: Partial<CalendarEvent>): void {
   if (patch.attendees !== undefined) row.attendees = JSON.stringify(patch.attendees);
   if (patch.calendarId !== undefined) row.calendarId = patch.calendarId;
   if (patch.color !== undefined) row.color = patch.color;
+  if (patch.colorOverride !== undefined) row.colorOverride = patch.colorOverride;
   if (patch.href !== undefined) row.href = patch.href;
   if ('alarms' in patch) {
     row.alarms = serializeAlarms(patch.alarms);

@@ -103,14 +103,14 @@ function buildIcsForInput(
         uid, summary: input.summary, description, location,
         dtstart: input.dtstart, dtend: input.dtend,
         organizerEmail: input.organizerEmail, organizerName: input.organizerName,
-        attendees: input.attendees, rrule: input.rrule, alarms,
+        attendees: input.attendees, color: input.color, rrule: input.rrule, alarms,
         sequence, extraLines,
       })
     : buildIcs({
         uid, summary: input.summary, description, location,
         dtstart: input.dtstart, dtend: input.dtend,
         organizerEmail: input.organizerEmail, organizerName: input.organizerName,
-        attendees: input.attendees, timezone, rrule: input.rrule, alarms,
+        attendees: input.attendees, color: input.color, timezone, rrule: input.rrule, alarms,
         sequence, extraLines,
       });
 }
@@ -166,7 +166,8 @@ function eventFromInput(
     dtstart,
     dtend,
     allDay: input.allDay,
-    color: calendar.color,
+    color: input.color ?? calendar.color,
+    colorOverride: !!input.color,
     attendees: input.attendees,
     organizerEmail: input.organizerEmail,
     talkUrl: TALK_URL_PATTERN.test(location) ? location : undefined,
@@ -235,6 +236,10 @@ export function useUpdateEvent(account: Account, calendars: CalendarMeta[]) {
       const shiftsWholeSeries = event.isRecurring && scope === 'all';
       const calendarChanged = !event.isRecurring && input.calendarId !== event.calendarId;
       const targetCal = calendarChanged ? calendars.find((c) => c.id === input.calendarId) : undefined;
+      const effectiveCalendar =
+        calendars.find((c) => c.id === input.calendarId) ??
+        calendars.find((c) => c.id === event.calendarId);
+      const effectiveColor = input.color ?? effectiveCalendar?.color ?? event.color;
 
       const nonTemporalPatch = {
         summary: input.summary,
@@ -242,6 +247,8 @@ export function useUpdateEvent(account: Account, calendars: CalendarMeta[]) {
         description: input.description ?? event.description,
         location: input.location ?? event.location,
         attendees: input.attendees,
+        color: effectiveColor,
+        colorOverride: !!input.color,
         alarms: resolveAlarms(input),
       };
 
@@ -254,7 +261,8 @@ export function useUpdateEvent(account: Account, calendars: CalendarMeta[]) {
           dtend,
           ...(targetCal && {
             calendarId: targetCal.id,
-            color: targetCal.color,
+            color: input.color ?? targetCal.color,
+            colorOverride: !!input.color,
             href: `${targetCal.url}${event.uid}.ics`,
           }),
         });
@@ -315,7 +323,7 @@ export function useUpdateEvent(account: Account, calendars: CalendarMeta[]) {
             uid: seriesBaseUid(event.uid), summary: input.summary, description, location,
             dtstart: input.dtstart, dtend: input.dtend, allDay: input.allDay,
             organizerEmail: scheduled.organizerEmail, organizerName: input.organizerName,
-            attendees: input.attendees, timezone, recurrenceId: occurrenceSlot(event),
+            attendees: input.attendees, color: input.color, timezone, recurrenceId: occurrenceSlot(event),
             alarms: resolveAlarms(input),
             sequence: extractSequence(masterIcs) + 1,
             extraLines: extractExtraVeventLines(masterIcs),

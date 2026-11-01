@@ -76,6 +76,7 @@
     "calendarVisibility": "{{name}} tonen"
   },
   "event": {
+    "color": "Kleur",
     "titleLabel": "Titel *",
     "titlePlaceholder": "Titel van afspraak",
     "calendar": "Agenda",
