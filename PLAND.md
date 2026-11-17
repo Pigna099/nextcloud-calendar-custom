@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **T2.3 implemented**; typecheck/Jest green; unsigned IPA build pending |
+| Status | **T2.3 implemented**; typecheck/Jest green; unsigned IPA published (manual iPhone verification pending) |
 | Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -722,7 +722,12 @@ the inherited CI.
   - `yarn tsc --noEmit`: pass.
   - `yarn jest --ci --runInBand --silent`: **129/129 suites, 1140/1140 tests** pass.
   - `git diff --check`: clean.
-- Pending: push branch, PR checks, GitHub Actions unsigned IPA build, and manual iPhone test.
+  - GitHub Actions Test run [44140619621](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/44140619621): success.
+  - Unsigned IPA workflow [44140619661](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/44140619661): success.
+  - Published asset: `NextcloudCalendar-v1.9.3-unsigned.ipa` (19 MB) on release
+    [ios-unsigned-latest](https://github.com/Pigna099/nextcloud-calendar-custom/releases/tag/ios-unsigned-latest).
+  - IPA metadata verified: `1.9.3` (`CFBundleVersion` 3), bundle `com.soluce.nextcloud-calendar`.
+- Pending: manual iPhone/iLoader installation and visual verification.
 
 ---
 
