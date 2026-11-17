@@ -12,6 +12,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { AnimatedPressable, Button, Icon, Typography } from '@/ui/components';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import type { CalendarEvent } from '@/types';
 
 dayjs.extend(localizedFormat);
@@ -33,9 +34,15 @@ function MonthDaySheetImpl({
   const insets = useSafeAreaInsets();
   const language = useSettingsStore((s) => s.language);
   const { formatTime } = useTimeFormat();
+  const reduceMotion = useReduceMotion();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduceMotion ? 'none' : 'fade'}
+      onRequestClose={onClose}
+    >
       <View
         style={[styles.backdrop, { backgroundColor: colors.scrim }]}
         accessibilityViewIsModal

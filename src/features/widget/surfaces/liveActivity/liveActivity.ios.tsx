@@ -100,7 +100,7 @@ const CalendarLiveActivity = (props: ActivityProps) => {
   function Banner() {
     // Keep the event hue but pull it toward the same calm, deep surface used by
     // the widgets. Both gradient stops stay dark enough for WCAG AA white ink.
-    const tintBase = '#0e1114';
+    const tintBase = '#1b1e22';
     const tintStart = mixColor(props.color, tintBase, 0.34);
     const tintEnd = mixColor(props.color, tintBase, 0.2);
     const fg = '#ffffff';

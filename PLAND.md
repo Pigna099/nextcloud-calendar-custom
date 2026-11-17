@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **T2.3 implemented**; typecheck/Jest green; unsigned IPA published (manual iPhone verification pending) |
+| Status | **T2.4 implemented**; tests green; 1.9.4 IPA rebuild pending |
 | Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -728,6 +728,16 @@ the inherited CI.
     [ios-unsigned-latest](https://github.com/Pigna099/nextcloud-calendar-custom/releases/tag/ios-unsigned-latest).
   - IPA metadata verified: `1.9.3` (`CFBundleVersion` 3), bundle `com.soluce.nextcloud-calendar`.
 - Pending: manual iPhone/iLoader installation and visual verification.
+
+### 2026-11-17 — T2.4 grey dark theme and day-sheet fade
+
+- Replaced near-black dark tokens with neutral grey surfaces: canvas `#1b1e22`,
+  surface `#24282d`, raised `#2c3137`, and lighter control borders.
+- Mirrored the grey palette in iOS widgets, Android widget core, and Live Activity tints.
+- Changed `MonthDaySheet` from slide to a fade transition; reduce-motion switches it to none.
+- Version bumped to **1.9.4** (`versionCode` 10904).
+- Validation: `tsc` pass; full Jest **129 suites / 1140 tests** pass.
+- Pending: unsigned IPA rebuild and iPhone verification.
 
 ---
 
