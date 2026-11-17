@@ -10,7 +10,7 @@ import { contrastFor } from '@/features/calendar/utils/eventInk';
 import { EVENT_COLORS } from '@/utils/eventColors';
 import { TalkToggle } from './TalkToggle';
 import { AttendeesField } from './AttendeesField';
-import { requestAlertPermission } from '@/features/notifications/scheduleAlerts';
+import { requestAlertPermission, scheduleEventAlerts } from '@/features/notifications/scheduleAlerts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { isWritableCalendar } from '@/utils/calendars';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
@@ -194,7 +194,7 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     }
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     Keyboard.dismiss();
     setTitleError(null);
     setCalendarError(null);
@@ -211,7 +211,11 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     const willAlert = alarms === undefined
       ? (allDay ? allDayAlerts : timedAlerts).length > 0
       : alarms.length > 0;
-    if (willAlert) await requestAlertPermission();
+    if (willAlert) {
+      void requestAlertPermission().then((granted) => {
+        if (granted) void scheduleEventAlerts();
+      });
+    }
 
     onSubmit({
       summary: summary.trim(), calendarId, color, dtstart, dtend, allDay,

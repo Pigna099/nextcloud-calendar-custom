@@ -421,7 +421,7 @@ describe('EventForm sections', () => {
       />
     );
 
-    expect(getByTestId('event-form-duration')).toHaveTextContent('1h 30m');
+    expect(getByTestId('event-form-duration')).toHaveTextContent(/1h 30m/);
   });
 
   it('does not show a duration hint for all-day events', () => {

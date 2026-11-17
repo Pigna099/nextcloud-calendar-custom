@@ -307,9 +307,18 @@ const AgendaViewImpl = forwardRef<AgendaViewHandle, Props>(function AgendaView(
   }, [rows, offsets]);
 
   const lastDateJumpRef = useRef<string | null>(null);
+  const firstDateEffectRef = useRef(true);
   useEffect(() => {
     const key = dayjs(date).format('YYYY-MM-DD');
     const index = rows.findIndex((row) => row.type === 'header' && row.key === key);
+    if (firstDateEffectRef.current) {
+      firstDateEffectRef.current = false;
+      // initialScrollIndex already positions a mounted list.
+      if (index >= 0) {
+        lastDateJumpRef.current = key;
+        return;
+      }
+    }
     if (index < 0 || lastDateJumpRef.current === key) return;
     lastDateJumpRef.current = key;
     const y = offsets[index];

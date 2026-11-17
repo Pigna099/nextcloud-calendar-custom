@@ -50,6 +50,6 @@ describe('TimeGridPage', () => {
   it('marks only the column matching today as today', () => {
     const today = new Date();
     const { getAllByTestId } = render(page({ dates: [today, new Date(2026, 7, 8)], dayIndex: new Map() }));
-    expect(getAllByTestId('now-indicator')).toHaveLength(1);
+    expect(getAllByTestId('now-indicator', { includeHiddenElements: true })).toHaveLength(1);
   });
 });

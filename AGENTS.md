@@ -245,18 +245,19 @@ Release: `yarn release` (release-it). CI release is triggered by merging a PR wh
 
 | Workflow | Trigger | Purpose | Requirements |
 | --- | --- | --- | --- |
-| `test.yml` | `pull_request` | `yarn install --immutable`, `tsc --noEmit`, `jest --ci`, Android JS bundle export | Node LTS, Yarn cache |
-| `ios-build.yml` | `workflow_dispatch` (manual) | Expo prebuild, CocoaPods, Xcode simulator build, artifact upload | macOS runner; no Apple signing secrets |
+| `test.yml` | `pull_request`; manual; push to `ios-unsigned` | `yarn install --immutable`, `tsc --noEmit`, `jest --ci`, Android JS bundle export | Node LTS, Yarn cache |
+| `ios-build.yml` | `workflow_dispatch` (manual) | Expo prebuild, CocoaPods, Xcode simulator/device build, artifact upload | macOS runner; no Apple signing secrets |
+| `ios-unsigned.yml` | manual; push to `ios-unsigned` | Unsigned device IPA, artifact and `ios-unsigned-latest` release asset for iLoader | macOS runner; `GITHUB_TOKEN` contents write |
 | `security.yml` | PR + push to `main` | Trivy dependency scan, Gitleaks secret scan | `GITLEAKS_LICENSE` secret |
 | `plumber.yml` | PR + push to `main` | Plumber score/pipeline checks | Plumber access, OIDC |
 | `release.yml` | `workflow_dispatch`; closed PR to `main` with `[release]` | Version bump, changelog, release, EAS dispatch | `APP_ID` variable, `APP_PRIVATE_KEY`, `EXPO_TOKEN` |
 | `expo.yml` | `workflow_call` | EAS build and store submission | `EXPO_TOKEN`, EAS project access |
 
-GitHub Actions is enabled on the custom repository and all six workflows are active (the five
-inherited workflows plus `ios-build.yml`). The custom repository does **not** yet have upstream
-secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`, `EXPO_TOKEN`, `GITLEAKS_LICENSE`) or the upstream
-Expo/EAS organization. Do not trigger release/EAS workflows until those are configured or the
-workflows are intentionally adapted.
+GitHub Actions is enabled on the custom repository and all seven workflows are active (the five
+inherited workflows plus `ios-build.yml` and `ios-unsigned.yml`). The custom repository does **not**
+yet have upstream secrets/variables (`APP_ID`, `APP_PRIVATE_KEY`, `EXPO_TOKEN`, `GITLEAKS_LICENSE`)
+or the upstream Expo/EAS organization. Do not trigger release/EAS workflows until those are
+configured or the workflows are intentionally adapted.
 
 The iOS simulator build is a cold native build and takes roughly 31-33 minutes on `macos-15`;
 macOS arm64 runners can also queue for capacity. It is **manual-only** to conserve free-tier

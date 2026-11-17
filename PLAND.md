@@ -5,8 +5,8 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0 complete**; Phase 1 complete; T2.1 + T2.2 implemented (IPA build/visual verification pending) |
-| Last updated | 2026-10-31 |
+| Status | **T2.3 implemented**; typecheck/Jest green; unsigned IPA build pending |
+| Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
 | Default branch | `main` |
@@ -700,6 +700,29 @@ the inherited CI.
 - Validation: `tsc` pass; targeted 122 tests; full **108 suites / 994 tests** pass.
 - v5 IPA built successfully; published as pre-release `test-ipa-v5` for installation.
 - Pending: manual visual verification on iPhone 13 mini.
+
+### 2026-11-17 — T2.3 UX refresh, notifications, and unsigned iOS release
+
+- Rebased the feature work onto `feat/google-calendar-month-view`, preserving T2.1's dense
+  month grid and T2.2's per-event colors.
+- Month grid: tapping a populated day opens a full day sheet; tapping an empty day starts
+  event creation; event bars still open details; overflow remains bounded by measured lanes.
+- Navigation: separated `visibleMonth` from the selected date so paging never selects the
+  1st; month paging only debounces data fetching and updates the header.
+- Notifications: fixed permission detection/provisional iOS authorization, Android channel
+  sound + exact alarms, future-event rescheduling, safer cancel/schedule order, pending-run
+  retries, notification deep links, and a 45-day sync/scheduling horizon.
+- UI: calm lower-chroma palette with on-color/soft tokens, tinted event bars with accent
+  rails, tonal chips/FAB/tabs, drawer Settings hub, event form sections + color swatches,
+  search/jump sheet, font-scale density, reduced motion, 44pt targets, and VoiceOver labels.
+- Added `.github/workflows/ios-unsigned.yml`: macOS unsigned device IPA, artifact upload, and
+  `ios-unsigned-latest` GitHub release asset for iLoader. Build number comes from the run.
+- Version bumped to **1.9.3** (`versionCode` 10903). No app identity or licensing changes.
+- Validation (2026-11-17):
+  - `yarn tsc --noEmit`: pass.
+  - `yarn jest --ci --runInBand --silent`: **129/129 suites, 1140/1140 tests** pass.
+  - `git diff --check`: clean.
+- Pending: push branch, PR checks, GitHub Actions unsigned IPA build, and manual iPhone test.
 
 ---
 

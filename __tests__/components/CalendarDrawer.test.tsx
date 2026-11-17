@@ -81,7 +81,7 @@ describe('CalendarDrawer', () => {
 
   it('renders a lighter scrim and a rounded drawer edge', () => {
     const { getByTestId } = renderDrawer();
-    expect(StyleSheet.flatten(getByTestId('calendar-drawer-scrim').props.style).backgroundColor)
+    expect(StyleSheet.flatten(getByTestId('calendar-drawer-scrim', { includeHiddenElements: true }).props.style).backgroundColor)
       .toBe(lightTheme.colors.scrim);
     expect(StyleSheet.flatten(getByTestId('calendar-drawer-panel').props.style)).toMatchObject({
       borderTopRightRadius: lightTheme.radius.lg,
@@ -98,7 +98,7 @@ describe('CalendarDrawer', () => {
     panel.props.onAccessibilityEscape();
     expect(onClose).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByTestId('calendar-drawer-backdrop'));
+    fireEvent.press(getByTestId('calendar-drawer-backdrop', { includeHiddenElements: true }));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 

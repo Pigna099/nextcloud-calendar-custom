@@ -128,21 +128,21 @@ describe('DayColumn', () => {
     const today = render(
       <DayColumn date={new Date()} positioned={[]} hourRowHeight={60} isToday onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
-    expect(today.queryByTestId('now-indicator')).toBeTruthy();
+    expect(today.queryByTestId('now-indicator', { includeHiddenElements: true })).toBeTruthy();
 
     const other = render(
       <DayColumn date={new Date(2020, 0, 1)} positioned={[]} hourRowHeight={60} isToday onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
-    expect(other.queryByTestId('now-indicator')).toBeNull();
+    expect(other.queryByTestId('now-indicator', { includeHiddenElements: true })).toBeNull();
   });
 
   it('advances the now indicator position as its clock advances, without remounting', () => {
     const early = render(<NowIndicator date={date} now={new Date(2026, 7, 7, 1, 0)} />);
-    const earlyTop = (early.getByTestId('now-indicator').props.style as Array<{ top?: string }>)
+    const earlyTop = (early.getByTestId('now-indicator', { includeHiddenElements: true }).props.style as Array<{ top?: string }>)
       .find((s) => s?.top)?.top;
 
     early.rerender(<NowIndicator date={date} now={new Date(2026, 7, 7, 13, 0)} />);
-    const laterTop = (early.getByTestId('now-indicator').props.style as Array<{ top?: string }>)
+    const laterTop = (early.getByTestId('now-indicator', { includeHiddenElements: true }).props.style as Array<{ top?: string }>)
       .find((s) => s?.top)?.top;
 
     expect(earlyTop).not.toBe(laterTop);
@@ -152,7 +152,7 @@ describe('DayColumn', () => {
     const { queryByTestId } = render(
       <NowIndicator date={new Date(2020, 0, 1)} now={new Date(2026, 7, 7, 13, 0)} />
     );
-    expect(queryByTestId('now-indicator')).toBeNull();
+    expect(queryByTestId('now-indicator', { includeHiddenElements: true })).toBeNull();
   });
 
   it('labels the empty column surface as a create-event button with the full date', () => {

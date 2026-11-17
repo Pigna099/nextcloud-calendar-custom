@@ -29,7 +29,7 @@ describe.each([
     expect(selectedStyle.backgroundColor).toBe(theme.colors.primarySoft);
     expect(selectedStyle.borderColor).toBe(theme.colors.primarySoftText);
 
-    const selectedLabel = within(selected).getByText((value) => value.trim().length > 0);
+    const selectedLabel = within(selected).getByText(/\S/);
     const selectedLabelStyle = StyleSheet.flatten(selectedLabel.props.style) as Record<string, unknown>;
     expect(selectedLabelStyle.color).toBe(theme.colors.primarySoftText);
     expect(
@@ -49,7 +49,7 @@ describe.each([
     expect(noneStyle.backgroundColor).toBe(theme.colors.primarySoft);
     expect(noneStyle.borderColor).toBe(theme.colors.primarySoftText);
 
-    const noneLabel = within(none).getByText((value) => value.trim().length > 0);
+    const noneLabel = within(none).getByText(/\S/);
     const noneLabelStyle = StyleSheet.flatten(noneLabel.props.style) as Record<string, unknown>;
     expect(noneLabelStyle.color).toBe(theme.colors.primarySoftText);
 
