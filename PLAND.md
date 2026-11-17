@@ -736,7 +736,7 @@ the inherited CI.
 - Mirrored the grey palette in iOS widgets, Android widget core, and Live Activity tints.
 - Changed `MonthDaySheet` from slide to a fade transition; reduce-motion switches it to none.
 - Version bumped to **1.9.4** (`versionCode` 10904).
-- Validation: `tsc` pass; full Jest **129 suites / 1140 tests** pass.
+- Validation: `tsc` pass; full Jest **130 suites / 1142 tests** pass.
 - Pending: unsigned IPA rebuild and iPhone verification.
 
 ---
