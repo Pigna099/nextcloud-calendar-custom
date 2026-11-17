@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **T2.4 implemented**; tests green; 1.9.4 IPA published (manual iPhone verification pending) |
+| Status | **T2.5 implemented**; tests green; 1.9.5 IPA rebuild pending |
 | Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -742,6 +742,17 @@ the inherited CI.
   asset `NextcloudCalendar-v1.9.4-unsigned.ipa` (`CFBundleVersion` 4) on release
   [ios-unsigned-latest](https://github.com/Pigna099/nextcloud-calendar-custom/releases/tag/ios-unsigned-latest).
 - Pending: manual iPhone verification.
+
+### 2026-11-17 — T2.5 Google Calendar-like event saturation
+
+- Increased event tint saturation from 10%/24% to 38%/52% (light/dark) while
+  preserving WCAG-picked text ink and the full-strength calendar-color rail.
+- All event surfaces share the change: month bars, timed cards, all-day chips,
+  drag preview, widgets, and Live Activity.
+- Kept the calm grey app chrome; only event colors became more vivid.
+- Version bumped to **1.9.5** (`versionCode` 10905).
+- Validation: `tsc` pass; full Jest **130 suites / 1142 tests** pass.
+- Pending: unsigned IPA rebuild and iPhone verification.
 
 ---
 

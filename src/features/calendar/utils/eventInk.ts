@@ -8,8 +8,10 @@ export { mix as mixColor } from '@/utils/color';
  * colour instead of solid paint. Shape is unchanged for existing callers.
  */
 export function eventChipColors(color: string, surface: string, dark: boolean) {
-  const background = mix(color, surface, dark ? 0.24 : 0.1);
-  const border = mix(color, background, dark ? 0.48 : 0.38);
+  // Google Calendar-like event pills: noticeably tinted with the calendar hue,
+  // not full saturation. Dark mode needs a higher mix to stay vivid on grey.
+  const background = mix(color, surface, dark ? 0.52 : 0.38);
+  const border = mix(color, background, dark ? 0.58 : 0.46);
   const parsed = parseHexColor(color);
   const rail = parsed ? toHexColor(parsed) : surface;
 
@@ -21,7 +23,7 @@ export function eventChipInk(background: string) {
   const text = pickInk(background);
   return {
     text,
-    textSecondary: mix(text, background, 0.78),
+    textSecondary: mix(text, background, 0.86),
   };
 }
 
