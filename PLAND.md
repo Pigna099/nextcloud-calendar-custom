@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **T2.5 implemented**; tests green; 1.9.5 IPA rebuild pending |
+| Status | **T2.5 implemented**; tests green; 1.9.5 IPA published (manual iPhone verification pending) |
 | Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -752,7 +752,11 @@ the inherited CI.
 - Kept the calm grey app chrome; only event colors became more vivid.
 - Version bumped to **1.9.5** (`versionCode` 10905).
 - Validation: `tsc` pass; full Jest **130 suites / 1142 tests** pass.
-- Pending: unsigned IPA rebuild and iPhone verification.
+  GitHub Actions test success. Unsigned IPA:
+  [run 44151181524](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/44151181524),
+  asset `NextcloudCalendar-v1.9.5-unsigned.ipa` (`CFBundleVersion` 5) on release
+  [ios-unsigned-latest](https://github.com/Pigna099/nextcloud-calendar-custom/releases/tag/ios-unsigned-latest).
+- Pending: iPhone visual verification.
 
 ---
 
