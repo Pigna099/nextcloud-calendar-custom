@@ -5,7 +5,7 @@ stable architecture and conventions.
 
 | Field | Value |
 | --- | --- |
-| Status | **T2.4 implemented**; tests green; 1.9.4 IPA rebuild pending |
+| Status | **T2.4 implemented**; tests green; 1.9.4 IPA published (manual iPhone verification pending) |
 | Last updated | 2026-11-17 |
 | Repository | https://github.com/Pigna099/nextcloud-calendar-custom |
 | Baseline | `main@791b84c80391e84b3764b7f1e2c6ab6b239be41d` (v1.9.2) |
@@ -737,7 +737,11 @@ the inherited CI.
 - Changed `MonthDaySheet` from slide to a fade transition; reduce-motion switches it to none.
 - Version bumped to **1.9.4** (`versionCode` 10904).
 - Validation: `tsc` pass; full Jest **130 suites / 1142 tests** pass.
-- Pending: unsigned IPA rebuild and iPhone verification.
+  GitHub Actions test: success. Unsigned IPA:
+  [run 44147140101](https://github.com/Pigna099/nextcloud-calendar-custom/actions/runs/44147140101),
+  asset `NextcloudCalendar-v1.9.4-unsigned.ipa` (`CFBundleVersion` 4) on release
+  [ios-unsigned-latest](https://github.com/Pigna099/nextcloud-calendar-custom/releases/tag/ios-unsigned-latest).
+- Pending: manual iPhone verification.
 
 ---
 
