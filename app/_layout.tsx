@@ -13,6 +13,7 @@ import { useCapabilitiesSync } from '@/hooks/useCapabilitiesSync';
 import { useLanguageSync } from '@/hooks/useLanguageSync';
 import { useWidgetSync } from '@/features/widget';
 import { useEventAlerts } from '@/features/notifications/useEventAlerts';
+import { useNotificationResponse } from '@/features/notifications/useNotificationResponse';
 import { useContactCache } from '@/hooks/useContactCache';
 import { shouldLockPortrait } from '@/utils/device';
 
@@ -48,6 +49,11 @@ function ThemedStatusBar() {
   return <StatusBar style={dark ? 'light' : 'dark'} />;
 }
 
+function ReadyNavigator() {
+  useNotificationResponse();
+  return <RootNavigator />;
+}
+
 export default function RootLayout() {
   const { isAppReady } = useAppInitialization();
   useCapabilitiesSync();
@@ -65,7 +71,7 @@ export default function RootLayout() {
     <Providers>
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <ThemedStatusBar />
-        {isAppReady ? <RootNavigator /> : <FakeSplash />}
+        {isAppReady ? <ReadyNavigator /> : <FakeSplash />}
       </View>
     </Providers>
   );

@@ -21,5 +21,7 @@ appId: com.soluce.nextcloudcalendar
     id: month-day-${TODAY}
 - extendedWaitUntil: { visible: "E2E seed", timeout: 15000 }
 - tapOn:
+    id: month-day-sheet-close
+- tapOn:
     id: calendar-mode-schedule
 - extendedWaitUntil: { visible: "E2E seed", timeout: 15000 }

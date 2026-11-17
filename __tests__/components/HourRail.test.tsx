@@ -35,4 +35,16 @@ describe('HourRail', () => {
     expect(flat.flex).toBe(1);
     expect(flat.height).toBeUndefined();
   });
+
+  it('follows a caller-supplied width so it can grow with the font scale', () => {
+    const flat = StyleSheet.flatten(render(<HourRail width={57} />).getByTestId('hour-rail').props.style);
+    expect(flat.width).toBe(57);
+  });
+
+  it('keeps its labels in the accessibility tree', () => {
+    useSettingsStore.setState({ timeFormat: '24h' });
+    const { getByLabelText } = render(<HourRail />);
+    const label = getByLabelText('09:00');
+    expect(label.props.accessibilityRole).toBe('text');
+  });
 });

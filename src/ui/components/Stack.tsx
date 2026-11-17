@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { FlexAlignType, StyleProp, ViewProps, ViewStyle, DimensionValue } from 'react-native';
 import Reanimated, { LinearTransition } from 'react-native-reanimated';
 import { useTheme } from 'expo-router';
+import { alpha } from '@/utils/color';
 
 
 type Direction = 'vertical' | 'horizontal';
@@ -107,7 +108,7 @@ function Stack({
     dynamic.borderColor = colors.border;
     dynamic.borderWidth = 1;
     if (!noShadow && !flat) {
-      dynamic.shadowColor = '#000000';
+      dynamic.shadowColor = colors.shadow;
       dynamic.shadowOffset = { width: 0, height: 0 };
       dynamic.shadowOpacity = 0.16;
       dynamic.shadowRadius = 1.5;
@@ -115,7 +116,7 @@ function Stack({
   } else if (bordered) {
     dynamic.borderRadius = radius || rTokens.lg;
     dynamic.backgroundColor = backgroundColor || colors.card;
-    dynamic.borderColor = `${colors.border}33`;
+    dynamic.borderColor = alpha(colors.border, 0.2);
     dynamic.borderWidth = 1;
   }
 

@@ -7,7 +7,9 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { refreshWidgets } from '@/features/widget';
 import { liveActivity } from '@/features/widget/surfaces/liveActivity';
 import { AlarmOffsetPicker } from '@/features/notifications/AlarmOffsetPicker';
-import { requestAlertPermission, scheduleEventAlerts } from '@/features/notifications/scheduleAlerts';
+import {
+  hasAlertPermission, requestAlertPermission, scheduleEventAlerts,
+} from '@/features/notifications/scheduleAlerts';
 import { Button, Divider, Stack, Toggle, Typography } from '@/ui/components';
 
 const cardOuter = { marginHorizontal: 16, marginBottom: 4 };
@@ -22,10 +24,12 @@ export function NotificationSettings() {
   const setAllDayAlerts = useSettingsStore((s) => s.setAllDayAlerts);
 
   const [granted, setGranted] = useState(true);
+  const [alertsGranted, setAlertsGranted] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       setGranted(liveActivity.isSupported());
+      void hasAlertPermission().then(setAlertsGranted).catch(() => setAlertsGranted(false));
     }, [])
   );
 
@@ -42,9 +46,19 @@ export function NotificationSettings() {
     await refreshWidgets();
   }
 
+  async function handleEnableAlerts() {
+    const ok = await requestAlertPermission();
+    setAlertsGranted(ok);
+    if (ok) await scheduleEventAlerts();
+    else await Linking.openSettings();
+  }
+
   async function applyAlerts(next: number[], set: (v: number[]) => void) {
     set(next);
-    if (next.length > 0) await requestAlertPermission();
+    if (next.length > 0) {
+      const ok = await requestAlertPermission();
+      setAlertsGranted(ok);
+    }
     await scheduleEventAlerts();
   }
 
@@ -74,6 +88,19 @@ export function NotificationSettings() {
       )}
 
       <Divider />
+
+      {!alertsGranted && (
+        <>
+          <Typography variant="caption" color="secondary">
+            {t('settings.notifications.permissionDenied')}
+          </Typography>
+          <Button
+            variant="link" size="small" alignment="start" color="primary"
+            title={t('settings.notifications.openSettings')}
+            onPress={() => void handleEnableAlerts()}
+          />
+        </>
+      )}
 
       <Stack gap={2}>
         <Typography variant="body1">{t('settings.alerts.timed')}</Typography>

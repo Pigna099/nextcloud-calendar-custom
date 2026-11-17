@@ -15,7 +15,8 @@ export default function FakeSplash() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#109be6',
+    // Keep in sync with lightTheme.colors.primary / app.config splash colours.
+    backgroundColor: '#08679c',
     alignItems: 'center',
     justifyContent: 'center',
   },

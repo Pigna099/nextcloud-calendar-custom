@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useTheme } from 'expo-router';
+import { alpha } from '@/utils/color';
 
 interface ListProps {
   children?: React.ReactNode;
@@ -17,7 +18,7 @@ function List({ children, radius = 16, ignoreBorder = false, style }: ListProps)
     <View
       style={[
         styles.card,
-        { borderRadius: radius, backgroundColor: colors.item, borderColor: `${colors.border}55` },
+        { borderRadius: radius, backgroundColor: colors.item, borderColor: alpha(colors.border, 0.55) },
         style,
       ]}
     >

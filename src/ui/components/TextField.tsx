@@ -25,13 +25,13 @@ function TextField({ label, error, right, style, ...rest }: TextFieldProps) {
           {
             backgroundColor: colors.surface,
             borderRadius: radius.md,
-            borderColor: error ? colors.danger : colors.border,
+            borderColor: error ? colors.danger : colors.borderStrong,
           },
         ]}
       >
         <TextInput
           {...rest}
-          placeholderTextColor={colors.text + '66'}
+          placeholderTextColor={colors.textTertiary}
           style={[styles.input, { color: colors.text }, style]}
         />
         {right}

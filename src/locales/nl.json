@@ -73,7 +73,17 @@
     "noTitle": "(Geen titel)",
     "drawerNoCalendars": "Geen agenda",
     "calendarNotifications": "Meldingen van {{name}}",
-    "calendarVisibility": "{{name}} tonen"
+    "calendarVisibility": "{{name}} tonen",
+    "search": {
+      "title": "Zoeken",
+      "placeholder": "Evenementen zoeken",
+      "jumpToDate": "Naar datum springen",
+      "hint": "Zoek gebeurtenissen van dit account op titel of locatie.",
+      "searching": "Zoeken…",
+      "error": "Kan gebeurtenissen niet doorzoeken.",
+      "noResults": "Geen overeenkomende gebeurtenissen"
+    },
+    "openMenu": "Menu openen"
   },
   "event": {
     "color": "Kleur",
@@ -169,7 +179,11 @@
     "errorCreateFailed": "Aanmaken van afspraak mislukt",
     "errorUpdateFailed": "Bijwerken van afspraak mislukt",
     "errorDeleteFailed": "Verwijderen van afspraak mislukt",
-    "alerts": "Herinneringen"
+    "alerts": "Herinneringen",
+    "details": "Details",
+    "when": "Wanneer",
+    "more": "Meer",
+    "duration": "Duur"
   },
   "settings": {
     "title": "Instellingen",

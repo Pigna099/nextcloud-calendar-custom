@@ -16,15 +16,14 @@ import InfinitePager, { type InfinitePagerImperativeApi } from 'react-native-inf
 import type { CalendarEvent } from '@/types';
 import type { CalMode } from '../constants';
 import {
-  DAY_HEADER_HEIGHT,
-  HOUR_RAIL_WIDTH,
-  allDayRowHeight,
   buildDayIndex,
   pageDates,
   pageFocusDate,
   pageIndexForDate,
   stabilizeDayIndex,
 } from '../utils/grid';
+import { allDaySectionHeight, useCalendarDensity } from '../hooks/useCalendarDensity';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 import type { GridEvent } from '../utils/toGridEvents';
 import { GridLines } from './GridLines';
 import { HourRail } from './HourRail';
@@ -60,6 +59,10 @@ function TimeGridViewImpl({
 }: Props) {
   const activeRef = useRef(active); activeRef.current = active;
   const { colors } = useTheme();
+  const density = useCalendarDensity();
+  const reduceMotion = useReduceMotion();
+  const reduceMotionRef = useRef(reduceMotion);
+  reduceMotionRef.current = reduceMotion;
   const pagerRef = useRef<InfinitePagerImperativeApi>(null);
 
   const syncNode = useSharedValue(0);
@@ -74,12 +77,6 @@ function TimeGridViewImpl({
   }, [events]);
 
   const gridHeightStyle = useAnimatedStyle(() => ({ height: cellHeight.value * 24 }), [cellHeight]);
-
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60 * 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const [localAnchor, setLocalAnchor] = useState(anchorDate);
   useEffect(() => { setLocalAnchor(anchorDate); }, [anchorDate]);
@@ -106,8 +103,8 @@ function TimeGridViewImpl({
   settledIndexRef.current = settledIndex;
 
   const headerHeight = useMemo(
-    () => DAY_HEADER_HEIGHT + allDayRowHeight(datesForIndex(settledIndex), allDayEvents),
-    [datesForIndex, settledIndex, allDayEvents]
+    () => density.gridDayHeaderHeight + allDaySectionHeight(datesForIndex(settledIndex), allDayEvents, density),
+    [density, datesForIndex, settledIndex, allDayEvents]
   );
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -192,7 +189,7 @@ function TimeGridViewImpl({
 
     if (Math.abs(target - from) <= MAX_ANIMATED_JUMP_PAGES) {
       setSettledIndex(target);
-      pagerRef.current?.setPage(target, { animated: true });
+      pagerRef.current?.setPage(target, { animated: !reduceMotionRef.current });
       return;
     }
     setLocalAnchor(jump.target);
@@ -210,12 +207,11 @@ function TimeGridViewImpl({
     ({ index }: { index: number }) => (
       <TimeGridHeader
         dates={datesForIndex(index)}
-        now={now}
         allDayEvents={allDayEvents}
         onPressEvent={onPressAllDayEvent}
       />
     ),
-    [datesForIndex, now, allDayEvents, onPressAllDayEvent]
+    [datesForIndex, allDayEvents, onPressAllDayEvent]
   );
 
   const renderGridPage = useCallback(
@@ -224,13 +220,12 @@ function TimeGridViewImpl({
         dates={datesForIndex(index)}
         dayIndex={dayIndex}
         hourRowHeight={hourRowHeight}
-        now={now}
         onPressSlot={onPressSlot}
         onPressEvent={onPressEvent}
         onMoveEvent={onMoveEvent}
       />
     ),
-    [datesForIndex, dayIndex, hourRowHeight, now, onPressSlot, onPressEvent, onMoveEvent]
+    [datesForIndex, dayIndex, hourRowHeight, onPressSlot, onPressEvent, onMoveEvent]
   );
 
   return (
@@ -259,7 +254,7 @@ function TimeGridViewImpl({
                   the whole grid rather than 24 flex cells per day column. The
                   opaque rail covers the part that runs behind it. */}
               <GridLines />
-              <HourRail />
+              <HourRail width={density.hourRailWidth} />
               <InfinitePager
                 key={pagerKey}
                 ref={pagerRef}
@@ -286,7 +281,7 @@ function TimeGridViewImpl({
             },
           ]}
         >
-          <View style={[styles.corner, { backgroundColor: colors.background }]} />
+          <View style={[styles.corner, { width: density.hourRailWidth, backgroundColor: colors.background }]} />
           <InfinitePager
             key={pagerKey}
             style={styles.fill}
@@ -317,6 +312,6 @@ const styles = StyleSheet.create({
     zIndex: 20,
     overflow: 'hidden',
   },
-  corner: { width: HOUR_RAIL_WIDTH, zIndex: 10 },
+  corner: { zIndex: 10 },
   gridRow: { flexDirection: 'row' },
 });

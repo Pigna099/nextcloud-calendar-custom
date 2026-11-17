@@ -22,7 +22,7 @@ function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <AnimatedPressable animated={false} onPress={onClose} style={styles.backdrop}>
+      <AnimatedPressable animated={false} onPress={onClose} style={[styles.backdrop, { backgroundColor: colors.scrim }]}>
         <View
           onStartShouldSetResponder={() => true}
           style={[
@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
     width: '100%',

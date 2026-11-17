@@ -9,10 +9,11 @@ import {
 } from 'react-native-android-widget';
 
 import type { AgendaEventItem, AgendaSnapshot, AgendaTimelineEntry, WidgetSurface } from '../../core/types';
-import { type AgendaGroup, agendaGroups, agendaHeader, agendaPalette, compactEvents, emptyLabel } from '../../core/agendaView';
-import { onEventColor, widgetPalette, widgetRadius, widgetSpacing, widgetType } from '../../core/theme';
+import { type AgendaGroup, agendaGroups, agendaHeader, agendaPalette, agendaScheme, compactEvents, emptyLabel } from '../../core/agendaView';
+import { widgetPalette, widgetRadius, widgetSpacing, widgetType } from '../../core/theme';
 import { readAgendaSnapshot, writeAgendaTimeline } from '../../storage/widgetStore';
 import { buildFreshTimeline } from '../../core/buildTimeline';
+import { eventChipColorsWithInk } from '@/features/calendar/utils/eventInk';
 
 type Palette = ReturnType<typeof widgetPalette>;
 
@@ -22,23 +23,27 @@ function compactLimit(widgetName: string): number {
   return widgetName === 'CalendarSmallWidget' ? 2 : 3;
 }
 
-function EventRow({ event }: { event: AgendaEventItem }) {
-  const fg = onEventColor(event.color);
+function EventRow({ event, palette, dark }: { event: AgendaEventItem; palette: Palette; dark: boolean }) {
+  const chip = eventChipColorsWithInk(event.color, palette.surface, dark);
   return (
     <FlexWidget style={{ width: 'match_parent', flexDirection: 'column', paddingTop: widgetSpacing.sm }}>
       <FlexWidget
         style={{
           width: 'match_parent',
           flexDirection: 'column',
-          backgroundColor: event.color as `#${string}`,
+          backgroundColor: chip.background as `#${string}`,
+          borderColor: chip.border as `#${string}`,
+          borderWidth: 1,
+          borderLeftWidth: 3,
+          borderLeftColor: chip.rail as `#${string}`,
           borderRadius: widgetRadius.sm,
           padding: 10,
         }}
         clickAction="OPEN_URI"
         clickActionData={{ uri: event.deepLink }}
       >
-        <TextWidget text={event.title} maxLines={1} style={{ fontSize: widgetType.body, fontWeight: '500', color: fg }} />
-        <TextWidget text={event.timeLabel} maxLines={1} style={{ fontSize: widgetType.time, color: fg, marginTop: 2 }} />
+        <TextWidget text={event.title} maxLines={1} style={{ fontSize: widgetType.body, fontWeight: '500', color: chip.text as `#${string}` }} />
+        <TextWidget text={event.timeLabel} maxLines={1} style={{ fontSize: widgetType.time, color: chip.textSecondary as `#${string}`, marginTop: 2 }} />
       </FlexWidget>
     </FlexWidget>
   );
@@ -62,13 +67,14 @@ function EmptyState({ snapshot, palette }: { snapshot: AgendaSnapshot | null; pa
 
 function LargeAndroidWidget({ snapshot }: { snapshot: AgendaSnapshot | null }) {
   const palette = agendaPalette(snapshot);
+  const dark = agendaScheme(snapshot) === 'dark';
   const groups = agendaGroups(snapshot);
 
   const cells: React.ReactElement[] = [];
   for (const group of groups) {
     cells.push(<DayHeaderCell key={`h-${group.key}`} group={group} palette={palette} />);
     for (const event of group.items) {
-      cells.push(<EventRow key={`${group.key}-${event.uid}-${event.startIso}`} event={event} />);
+      cells.push(<EventRow key={`${group.key}-${event.uid}-${event.startIso}`} event={event} palette={palette} dark={dark} />);
     }
   }
 
@@ -95,6 +101,7 @@ function LargeAndroidWidget({ snapshot }: { snapshot: AgendaSnapshot | null }) {
 
 function CompactAndroidWidget({ snapshot, limit }: { snapshot: AgendaSnapshot | null; limit: number }) {
   const palette = agendaPalette(snapshot);
+  const dark = agendaScheme(snapshot) === 'dark';
   const header = agendaHeader(snapshot);
   const events = compactEvents(snapshot, limit);
 
@@ -119,7 +126,7 @@ function CompactAndroidWidget({ snapshot, limit }: { snapshot: AgendaSnapshot | 
         {events.length === 0 ? (
           <EmptyState snapshot={snapshot} palette={palette} />
         ) : (
-          events.map((event) => <EventRow key={`${event.uid}-${event.startIso}`} event={event} />)
+          events.map((event) => <EventRow key={`${event.uid}-${event.startIso}`} event={event} palette={palette} dark={dark} />)
         )}
       </FlexWidget>
     </FlexWidget>

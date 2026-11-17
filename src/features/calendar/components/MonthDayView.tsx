@@ -1,12 +1,17 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import dayjs from 'dayjs';
 import { useTheme } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { dayKey } from '../utils/grid';
 import InfinitePager, { type InfinitePagerImperativeApi } from 'react-native-infinite-pager';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { contrastFor } from '../utils/eventInk';
+import { eventChipColorsWithInk, mixColor } from '../utils/eventInk';
 import type { CalendarEvent } from '@/types';
+import { haptic } from '@/utils/haptics';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { useToday } from '../hooks/useToday';
+import { MonthDaySheet } from './MonthDaySheet';
 
 const MAX_ANIMATED_JUMP_MONTHS = 2;
 const DAYS_IN_WEEK = 7;
@@ -19,6 +24,8 @@ interface Props {
   events: CalendarEvent[];
   weekStartsOn: 0 | 1;
   jump: { nonce: number; target: Date };
+  active?: boolean;
+  loading?: boolean;
   onSelectDate: (d: Date) => void;
   onMonthChange: (d: Date) => void;
   onPressEvent: (e: CalendarEvent) => void;
@@ -173,10 +180,16 @@ function layoutWeek(week: dayjs.Dayjs[], events: CalendarEvent[]): WeekEvent[] {
 interface MonthGridProps {
   month: number;
   weeks: dayjs.Dayjs[][];
-  selected: dayjs.Dayjs;
+  selected: dayjs.Dayjs | null;
   today: dayjs.Dayjs;
   events: CalendarEvent[];
+  eventMap: Map<string, CalendarEvent[]>;
   colors: ReturnType<typeof useTheme>['colors'];
+  dark: boolean;
+  scale: number;
+  loading: boolean;
+  language: string;
+  noTitle: string;
   onDayPress: (d: dayjs.Dayjs) => void;
   onPressCell: (d: Date) => void;
   onPressEvent: (e: CalendarEvent) => void;
@@ -189,14 +202,17 @@ function asPct(value: number): `${number}%` {
 }
 
 const MonthGrid = memo(function MonthGrid({
-  month, weeks, selected, today, events, colors, onDayPress, onPressCell, onPressEvent,
+  month, weeks, selected, today, events, eventMap, colors, dark, scale, loading, language, noTitle,
+  onDayPress, onPressCell, onPressEvent,
 }: MonthGridProps) {
   const [measuredHeight, setMeasuredHeight] = useState(0);
   const pageHeight = measuredHeight || FALLBACK_PAGE_HEIGHT;
   const weekHeight = pageHeight / weeks.length;
+  const dateRowHeight = DATE_ROW_HEIGHT * scale;
+  const laneHeight = LANE_HEIGHT * scale;
   const maxLanes = Math.max(
     1,
-    Math.floor((weekHeight - DATE_ROW_HEIGHT - 2) / LANE_HEIGHT),
+    Math.floor((weekHeight - dateRowHeight - 2) / laneHeight),
   );
   const weekLayouts = useMemo(
     () => weeks.map((week) => layoutWeek(week, events)),
@@ -222,12 +238,23 @@ const MonthGrid = memo(function MonthGrid({
             {week.map((day, dayIndex) => {
               const isOutside = day.month() !== month;
               const isToday = day.isSame(today, 'day');
-              const isSelected = day.isSame(selected, 'day');
+              const isSelected = selected !== null && day.isSame(selected, 'day');
+              const key = day.format('YYYY-MM-DD');
+              const dayEvents = eventMap.get(key) ?? [];
+              const handlePress = () => {
+                if (isOutside) return;
+                haptic();
+                if (dayEvents.length > 0) onDayPress(day);
+                else if (!loading) onPressCell(day.toDate());
+              };
 
               return (
                 <TouchableOpacity
                   key={dayIndex}
-                  testID={`month-day-${day.format('YYYY-MM-DD')}`}
+                  testID={`month-day-${key}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected, disabled: isOutside }}
+                  accessibilityLabel={day.locale(language).format('LL')}
                   style={[
                     styles.dayCell,
                     { borderColor: colors.borderSubtle },
@@ -235,13 +262,21 @@ const MonthGrid = memo(function MonthGrid({
                     weekIndex === weeks.length - 1 && styles.lastRow,
                   ]}
                   disabled={isOutside}
-                  onPress={() => onDayPress(day)}
-                  onLongPress={() => onPressCell(day.toDate())}
+                  onPress={handlePress}
                 >
                   <View
                     style={[
                       styles.dateCircle,
-                      isSelected && { backgroundColor: colors.primary },
+                      {
+                        minWidth: 20 * scale,
+                        height: 20 * scale,
+                        borderRadius: 10 * scale,
+                      },
+                      isSelected && {
+                        backgroundColor: mixColor(
+                          colors.primary, colors.background, dark ? 0.3 : 0.14,
+                        ),
+                      },
                       !isSelected && isToday && {
                         borderWidth: 1.2,
                         borderColor: colors.primary,
@@ -253,9 +288,10 @@ const MonthGrid = memo(function MonthGrid({
                       allowFontScaling={false}
                       style={[
                         styles.dateNumber,
+                        { fontSize: 12 * scale },
                         {
                           color: isSelected
-                            ? colors.primaryText
+                            ? colors.primary
                             : isToday
                               ? colors.primary
                               : isOutside
@@ -273,7 +309,7 @@ const MonthGrid = memo(function MonthGrid({
             })}
 
             {visible.map((item) => {
-              const ink = contrastFor(item.event.color);
+              const chip = eventChipColorsWithInk(item.event.color, colors.surface, dark);
               const left =
                 item.startCol * COLUMN_WIDTH_PCT + (item.continuesLeft ? 0 : 2);
               const rawWidth =
@@ -286,14 +322,19 @@ const MonthGrid = memo(function MonthGrid({
                 <TouchableOpacity
                   key={`${item.event.uid}-${item.event.dtstart.getTime()}-${weekIndex}-${item.lane}`}
                   testID={`month-event-${item.event.uid}-${weekIndex}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.event.summary || noTitle}
                   style={[
                     styles.eventBar,
                     {
                       left: asPct(left),
                       width: asPct(width),
-                      top: DATE_ROW_HEIGHT + item.lane * LANE_HEIGHT,
-                      height: LANE_HEIGHT - 1,
-                      backgroundColor: item.event.color,
+                      top: dateRowHeight + item.lane * laneHeight,
+                      height: laneHeight - 1,
+                      backgroundColor: chip.background,
+                      borderColor: chip.border,
+                      borderLeftWidth: item.continuesLeft ? 1 : 3,
+                      borderLeftColor: item.continuesLeft ? chip.border : chip.rail,
                       borderTopLeftRadius: item.continuesLeft ? 0 : 4,
                       borderBottomLeftRadius: item.continuesLeft ? 0 : 4,
                       borderTopRightRadius: item.continuesRight ? 0 : 4,
@@ -306,16 +347,30 @@ const MonthGrid = memo(function MonthGrid({
                     numberOfLines={1}
                     ellipsizeMode="clip"
                     allowFontScaling={false}
-                    style={[styles.eventTitle, { color: ink.text }]}
+                    style={[
+                      styles.eventTitle,
+                      { color: chip.text, fontSize: 10 * scale, lineHeight: 12 * scale },
+                    ]}
                   >
-                    {item.event.summary}
+                    {item.event.summary || noTitle}
                   </Text>
                 </TouchableOpacity>
               );
             })}
 
             {hidden > 0 && (
-              <Text style={[styles.more, { color: colors.textTertiary, backgroundColor: colors.background }]}>+{hidden}</Text>
+              <Text
+                style={[
+                  styles.more,
+                  {
+                    color: colors.textTertiary,
+                    backgroundColor: colors.background,
+                    fontSize: 9 * scale,
+                  },
+                ]}
+              >
+                +{hidden}
+              </Text>
             )}
           </View>
         );
@@ -325,17 +380,71 @@ const MonthGrid = memo(function MonthGrid({
 });
 
 function MonthDayViewImpl({
-  date, events, weekStartsOn, jump, onSelectDate, onMonthChange, onPressEvent, onPressCell,
+  date, events, weekStartsOn, jump, active = true, loading = false,
+  onSelectDate, onMonthChange, onPressEvent, onPressCell,
 }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const language = useSettingsStore((s) => s.language);
+  const reduceMotion = useReduceMotion();
+  const todayDate = useToday();
+  const { fontScale } = useWindowDimensions();
+  const scale = Math.min(1.25, Math.max(1, fontScale));
 
-  const selected = useMemo(() => dayjs(date), [date]);
-  const today = useMemo(() => dayjs(), []);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(date);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const selectedDateRef = useRef<Date | null>(date);
+  const reduceMotionRef = useRef(reduceMotion);
+  reduceMotionRef.current = reduceMotion;
+
+  const selected = useMemo(
+    () => selectedDate === null ? null : dayjs(selectedDate),
+    [selectedDate],
+  );
+  const today = useMemo(() => dayjs(todayDate), [todayDate]);
+
+  const eventMap = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const event of events) {
+      for (const key of eventDayKeys(event)) {
+        const bucket = map.get(key);
+        if (bucket) bucket.push(event);
+        else map.set(key, [event]);
+      }
+    }
+    for (const bucket of map.values()) {
+      bucket.sort((a, b) =>
+        Number(b.allDay) - Number(a.allDay) ||
+        a.dtstart.getTime() - b.dtstart.getTime() ||
+        a.dtend.getTime() - b.dtend.getTime() ||
+        a.summary.localeCompare(b.summary)
+      );
+    }
+    return map;
+  }, [events]);
+
+  const selectedEvents = useMemo(() => {
+    if (selected === null) return [];
+    return eventMap.get(selected.format('YYYY-MM-DD')) ?? [];
+  }, [eventMap, selected]);
 
   const handleDayPress = useCallback((d: dayjs.Dayjs) => {
-    onSelectDate(d.toDate());
+    const nextDate = d.toDate();
+    selectedDateRef.current = nextDate;
+    setSelectedDate(nextDate);
+    setSheetVisible(true);
+    onSelectDate(nextDate);
   }, [onSelectDate]);
+
+  const handleSheetEventPress = useCallback((event: CalendarEvent) => {
+    setSheetVisible(false);
+    onPressEvent(event);
+  }, [onPressEvent]);
+
+  const handleSheetCreate = useCallback((d: Date) => {
+    setSheetVisible(false);
+    onPressCell(d);
+  }, [onPressCell]);
 
   const dayHeaders = useMemo(() => {
     const headers: string[] = [];
@@ -356,33 +465,49 @@ function MonthDayViewImpl({
   const firstAnchorReset = useRef(true);
   useLayoutEffect(() => {
     if (firstAnchorReset.current) { firstAnchorReset.current = false; return; }
+    jumpTargetRef.current = null;
     settledIndexRef.current = 0;
     setPagerKey((k) => k + 1);
   }, [localAnchor]);
 
   const firstJump = useRef(true);
   useEffect(() => {
-    if (firstJump.current) { firstJump.current = false; return; }
+    if (!active) return;
+    if (firstJump.current) firstJump.current = false;
+    const keepDaySheetOpen = selectedDateRef.current !== null
+      && dayjs(selectedDateRef.current).isSame(jump.target, 'day');
+    selectedDateRef.current = jump.target;
+    setSelectedDate(jump.target);
+    if (!keepDaySheetOpen) setSheetVisible(false);
     const target = monthDiff(localAnchorRef.current, jump.target);
     const from = settledIndexRef.current;
-    if (target === from) return;
+    if (target === from) {
+      jumpTargetRef.current = null;
+      return;
+    }
     if (Math.abs(target - from) <= MAX_ANIMATED_JUMP_MONTHS) {
       jumpTargetRef.current = target;
       settledIndexRef.current = target;
-      pagerRef.current?.setPage(target, { animated: true });
+      pagerRef.current?.setPage(target, { animated: !reduceMotionRef.current });
       return;
     }
     setLocalAnchor(jump.target);
-  }, [jump]);
+  }, [jump, active]);
 
   const handlePageChange = useCallback((index: number) => {
     const prev = settledIndexRef.current;
     settledIndexRef.current = index;
     if (jumpTargetRef.current !== null) {
-      if (index === jumpTargetRef.current) jumpTargetRef.current = null;
-      return;
+      if (index === jumpTargetRef.current) {
+        jumpTargetRef.current = null;
+        return;
+      }
+      jumpTargetRef.current = null;
     }
     if (index === prev) return;
+    selectedDateRef.current = null;
+    setSelectedDate(null);
+    setSheetVisible(false);
     onMonthChange(dayjs(localAnchorRef.current).add(index, 'month').startOf('month').toDate());
   }, [onMonthChange]);
 
@@ -396,14 +521,21 @@ function MonthDayViewImpl({
         selected={selected}
         today={today}
         events={events}
+        eventMap={eventMap}
         colors={theme.colors}
+        dark={theme.dark}
+        scale={scale}
+        loading={loading}
+        language={language}
+        noTitle={t('calendar.noTitle')}
         onDayPress={handleDayPress}
         onPressCell={onPressCell}
         onPressEvent={onPressEvent}
       />
     );
   }, [
-    localAnchor, weekStartsOn, selected, today, events, theme.colors,
+    localAnchor, weekStartsOn, selected, today, events, eventMap,
+    theme.colors, theme.dark, scale, loading, language, t,
     handleDayPress, onPressCell, onPressEvent,
   ]);
 
@@ -413,8 +545,8 @@ function MonthDayViewImpl({
         {dayHeaders.map((label, index) => (
           <Text
             key={index}
+            maxFontSizeMultiplier={1.25}
             style={[styles.dowLabel, { color: theme.colors.textTertiary }]}
-            allowFontScaling={false}
           >
             {label}
           </Text>
@@ -432,6 +564,15 @@ function MonthDayViewImpl({
           pageBuffer={1}
         />
       </View>
+
+      <MonthDaySheet
+        visible={sheetVisible && selected !== null}
+        date={selected?.toDate() ?? null}
+        events={selectedEvents}
+        onClose={() => setSheetVisible(false)}
+        onPressEvent={handleSheetEventPress}
+        onCreate={handleSheetCreate}
+      />
     </View>
   );
 }

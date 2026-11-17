@@ -393,6 +393,67 @@ describe('EventForm contact suggestions', () => {
   });
 });
 
+describe('EventForm sections', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en');
+  });
+
+  it('groups the form into Details, When, and More sections', () => {
+    const { getByTestId, getByText } = render(<EventForm {...baseProps} />);
+
+    expect(getByText('Details')).toBeTruthy();
+    expect(getByText('When')).toBeTruthy();
+    expect(getByText('More')).toBeTruthy();
+    for (const id of ['event-form-section-details', 'event-form-section-when', 'event-form-section-more']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+  });
+
+  it('shows the calculated duration for timed events', () => {
+    const { getByTestId } = render(
+      <EventForm
+        {...baseProps}
+        initialValues={{
+          summary: 'Review',
+          dtstart: new Date(2026, 5, 1, 9, 0, 0),
+          dtend: new Date(2026, 5, 1, 10, 30, 0),
+        }}
+      />
+    );
+
+    expect(getByTestId('event-form-duration')).toHaveTextContent('1h 30m');
+  });
+
+  it('does not show a duration hint for all-day events', () => {
+    const { queryByTestId } = render(
+      <EventForm
+        {...baseProps}
+        initialValues={{
+          summary: 'Holiday',
+          allDay: true,
+          dtstart: new Date(2026, 5, 1),
+          dtend: new Date(2026, 5, 1),
+        }}
+      />
+    );
+
+    expect(queryByTestId('event-form-duration')).toBeNull();
+  });
+
+  it('keeps More controls visible by default and summarizes them when collapsed', () => {
+    const { getByTestId, getByText, queryByTestId } = render(
+      <EventForm {...baseProps} initialValues={{ summary: 'Lunch', location: 'Room 4' }} />
+    );
+
+    expect(getByTestId('event-form-location')).toBeTruthy();
+
+    fireEvent.press(getByTestId('event-form-more-toggle'));
+
+    expect(queryByTestId('event-form-location')).toBeNull();
+    expect(getByText('Room 4')).toBeTruthy();
+  });
+});
+
 describe('EventForm testIDs', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en');

@@ -1,3 +1,4 @@
+import { StyleSheet, View } from 'react-native';
 import { Tabs, useTheme } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Calendar, Settings as SettingsIcon, type LucideIcon } from 'lucide-react-native';
@@ -38,7 +39,10 @@ function NativeTabsLayout() {
   const theme = useTheme();
 
   return (
-      <NativeTabs labelStyle={{ color: theme.colors.text }} tintColor={theme.colors.primary}>
+      <NativeTabs
+        tintColor={theme.colors.primary}
+        labelStyle={{ color: theme.colors.tabBarInactive, fontSize: 11, fontWeight: '500' }}
+      >
         {TAB_ITEMS.map((tab) => (
             <NativeTabs.Trigger key={tab.name} name={tab.name}>
               <NativeTabs.Trigger.Label>{t(tab.labelKey)}</NativeTabs.Trigger.Label>
@@ -62,10 +66,10 @@ function JsTabsLayout() {
             tabBarStyle: {
               backgroundColor: theme.colors.tabBar,
               borderTopColor: theme.colors.tabBarBorder,
-              borderTopWidth: 1,
+              borderTopWidth: StyleSheet.hairlineWidth,
               elevation: 0,
             },
-            tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+            tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
           }}
       >
         {TAB_ITEMS.map(({ name, labelKey, Icon }) => (
@@ -77,7 +81,15 @@ function JsTabsLayout() {
                   tabBarLabel: t(labelKey),
                   tabBarButtonTestID: `tab-${name.split('/')[0]}`,
                   tabBarIcon: ({ color, focused }) => (
-                      <Icon size={focused ? 26 : 24} color={color} strokeWidth={focused ? 2.5 : 2} />
+                      <View
+                          testID={`tab-icon-${name.split('/')[0]}`}
+                          style={[
+                            styles.tabIcon,
+                            focused && { backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.pill },
+                          ]}
+                      >
+                        <Icon size={22} color={color} strokeWidth={2} />
+                      </View>
                   ),
                 }}
             />
@@ -85,6 +97,15 @@ function JsTabsLayout() {
       </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIcon: {
+    width: 40,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 export default function TabsLayout() {
   return nativeTabsEnabled() ? <NativeTabsLayout /> : <JsTabsLayout />;

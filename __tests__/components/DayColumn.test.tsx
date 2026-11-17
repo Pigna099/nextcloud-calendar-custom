@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { render as rtlRender, fireEvent } from '@testing-library/react-native';
 import { ThemeWrapper } from '../helpers/theme';
-import { DayColumn } from '@/features/calendar/components/DayColumn';
+import { DayColumn, NowIndicator } from '@/features/calendar/components/DayColumn';
 import type { GridEvent } from '@/features/calendar/utils/toGridEvents';
 import type { CalendarEvent } from '@/types';
 
@@ -23,12 +23,10 @@ function gridEvent(over: Partial<CalendarEvent> = {}): GridEvent {
 
 const positioned = (e: GridEvent) => [{ event: e, leftPct: 0, widthPct: 100, zIndex: 100 }];
 
-const now = new Date(2026, 7, 7, 12, 0);
-
 describe('DayColumn', () => {
   it('draws no horizontal rules of its own', () => {
     const { queryAllByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     expect(queryAllByTestId(/^hour-cell-/)).toHaveLength(0);
     expect(queryAllByTestId(/-line-/)).toHaveLength(0);
@@ -36,7 +34,7 @@ describe('DayColumn', () => {
 
   it('renders its events', () => {
     const { getByText } = render(
-      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     expect(getByText('Standup')).toBeTruthy();
   });
@@ -44,7 +42,7 @@ describe('DayColumn', () => {
   it('derives the tapped hour from the vertical touch position', () => {
     const onPressSlot = jest.fn();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
     );
 
     fireEvent.press(getByTestId('day-column-surface'), { nativeEvent: { locationY: 545 } });
@@ -59,7 +57,7 @@ describe('DayColumn', () => {
   it('ignores a swipe delivered as a press: a fling through weeks must not open a new event', () => {
     const onPressSlot = jest.fn();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
     );
     const surface = getByTestId('day-column-surface');
 
@@ -72,7 +70,7 @@ describe('DayColumn', () => {
   it('takes the hour from where the finger went down', () => {
     const onPressSlot = jest.fn();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
     );
     const surface = getByTestId('day-column-surface');
 
@@ -85,7 +83,7 @@ describe('DayColumn', () => {
   it('clamps a touch past the bottom to the last hour', () => {
     const onPressSlot = jest.fn();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={onPressSlot} onPressEvent={jest.fn()} />
     );
 
     fireEvent.press(getByTestId('day-column-surface'), { nativeEvent: { locationY: 99999 } });
@@ -97,7 +95,7 @@ describe('DayColumn', () => {
     const onPressEvent = jest.fn();
     const event = gridEvent();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={positioned(event)} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={onPressEvent} />
+      <DayColumn date={date} positioned={positioned(event)} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={onPressEvent} />
     );
 
     const box = getByTestId('event-box-u1');
@@ -113,7 +111,7 @@ describe('DayColumn', () => {
   it('does not report a press that lasted the whole long-press window', () => {
     const onPressEvent = jest.fn();
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={onPressEvent} />
+      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={onPressEvent} />
     );
 
     const box = getByTestId('event-box-u1');
@@ -126,32 +124,55 @@ describe('DayColumn', () => {
     jest.restoreAllMocks();
   });
 
-  it('shows the now indicator only on the day matching the now prop', () => {
+  it('shows the now indicator only when the column is flagged as today', () => {
     const today = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={new Date()} positioned={[]} hourRowHeight={60} isToday onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     expect(today.queryByTestId('now-indicator')).toBeTruthy();
 
     const other = render(
-      <DayColumn date={new Date(2020, 0, 1)} positioned={[]} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={new Date(2020, 0, 1)} positioned={[]} hourRowHeight={60} isToday onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     expect(other.queryByTestId('now-indicator')).toBeNull();
   });
 
-  it('advances the now indicator position as the now prop advances, without remounting', () => {
-    const early = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={new Date(2026, 7, 7, 1, 0)} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
-    );
+  it('advances the now indicator position as its clock advances, without remounting', () => {
+    const early = render(<NowIndicator date={date} now={new Date(2026, 7, 7, 1, 0)} />);
     const earlyTop = (early.getByTestId('now-indicator').props.style as Array<{ top?: string }>)
       .find((s) => s?.top)?.top;
 
-    early.rerender(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={new Date(2026, 7, 7, 13, 0)} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
-    );
+    early.rerender(<NowIndicator date={date} now={new Date(2026, 7, 7, 13, 0)} />);
     const laterTop = (early.getByTestId('now-indicator').props.style as Array<{ top?: string }>)
       .find((s) => s?.top)?.top;
 
     expect(earlyTop).not.toBe(laterTop);
+  });
+
+  it('does not draw the indicator on a different day, even when a clock is supplied', () => {
+    const { queryByTestId } = render(
+      <NowIndicator date={new Date(2020, 0, 1)} now={new Date(2026, 7, 7, 13, 0)} />
+    );
+    expect(queryByTestId('now-indicator')).toBeNull();
+  });
+
+  it('labels the empty column surface as a create-event button with the full date', () => {
+    const { getByTestId } = render(
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+    );
+    const surface = getByTestId('day-column-surface');
+    expect(surface.props.accessibilityRole).toBe('button');
+    expect(surface.props.accessibilityLabel).toBe('Friday, 7 August');
+    expect(surface.props.accessibilityHint).toBe('New Event');
+  });
+
+  it('labels a timed event as a button with its title and times', () => {
+    const { getByTestId } = render(
+      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+    );
+    const box = getByTestId('event-box-u1');
+    expect(box.props.accessibilityRole).toBe('button');
+    expect(box.props.accessibilityLabel).toMatch(/^Standup, /);
+    expect(box.props.accessibilityLabel).toContain('–');
   });
 
   it('applies the layout width to the event box', () => {
@@ -161,7 +182,6 @@ describe('DayColumn', () => {
         date={date}
         positioned={[{ event: e, leftPct: 50, widthPct: 50, zIndex: 101 }]}
         hourRowHeight={60}
-        now={new Date(2026, 7, 7, 12, 0)}
         onPressSlot={jest.fn()}
         onPressEvent={jest.fn()}
       />
@@ -173,7 +193,7 @@ describe('DayColumn', () => {
 
   it('reserves a 3px gap on the card via marginRight, not the touch target', () => {
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={positioned(gridEvent())} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     const cardStyle = StyleSheet.flatten(getByTestId('event-card-u1').props.style);
     expect(cardStyle.marginRight).toBe(3);
@@ -184,7 +204,7 @@ describe('DayColumn', () => {
 
   it('carries its own left divider rather than stacking 24 cell borders', () => {
     const { getByTestId } = render(
-      <DayColumn date={date} positioned={[]} hourRowHeight={60} now={now} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
+      <DayColumn date={date} positioned={[]} hourRowHeight={60} onPressSlot={jest.fn()} onPressEvent={jest.fn()} />
     );
     const flat = StyleSheet.flatten(getByTestId('day-column').props.style);
     expect(flat.borderLeftWidth).toBe(1);

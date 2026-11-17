@@ -73,7 +73,17 @@
     "noTitle": "(Без названия)",
     "drawerNoCalendars": "Нет календарей",
     "calendarNotifications": "Уведомления календаря «{{name}}»",
-    "calendarVisibility": "Показывать «{{name}}»"
+    "calendarVisibility": "Показывать «{{name}}»",
+    "search": {
+      "title": "Поиск",
+      "placeholder": "Поиск событий",
+      "jumpToDate": "Перейти к дате",
+      "hint": "Поиск событий этой учетной записи по названию или месту.",
+      "searching": "Поиск…",
+      "error": "Не удалось найти события.",
+      "noResults": "Нет подходящих событий"
+    },
+    "openMenu": "Открыть меню"
   },
   "event": {
     "color": "Цвет",
@@ -169,7 +179,11 @@
     "errorCreateFailed": "Не удалось создать событие",
     "errorUpdateFailed": "Не удалось обновить событие",
     "errorDeleteFailed": "Не удалось удалить событие",
-    "alerts": "Напоминания"
+    "alerts": "Напоминания",
+    "details": "Детали",
+    "when": "Когда",
+    "more": "Ещё",
+    "duration": "Длительность"
   },
   "settings": {
     "title": "Настройки",

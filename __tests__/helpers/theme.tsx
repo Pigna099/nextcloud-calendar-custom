@@ -1,7 +1,7 @@
 import React from 'react';
 import { ThemeProvider } from 'expo-router';
-import { lightTheme } from '../../src/theme';
+import { lightTheme, type Theme } from '../../src/theme';
 
-export function ThemeWrapper({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider value={lightTheme}>{children}</ThemeProvider>;
+export function ThemeWrapper({ children, theme = lightTheme }: { children: React.ReactNode; theme?: Theme }) {
+  return <ThemeProvider value={theme}>{children}</ThemeProvider>;
 }

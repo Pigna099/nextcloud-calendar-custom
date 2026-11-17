@@ -73,7 +73,17 @@
     "noTitle": "(Kein Titel)",
     "drawerNoCalendars": "Kein Kalender",
     "calendarNotifications": "Benachrichtigungen für {{name}}",
-    "calendarVisibility": "{{name}} anzeigen"
+    "calendarVisibility": "{{name}} anzeigen",
+    "search": {
+      "title": "Suche",
+      "placeholder": "Ereignisse suchen",
+      "jumpToDate": "Zu Datum springen",
+      "hint": "Ereignisse dieses Kontos nach Titel oder Ort suchen.",
+      "searching": "Suche…",
+      "error": "Ereignisse konnten nicht durchsucht werden.",
+      "noResults": "Keine passenden Ereignisse"
+    },
+    "openMenu": "Menü öffnen"
   },
   "event": {
     "color": "Farbe",
@@ -169,7 +179,11 @@
     "errorCreateFailed": "Ereignis konnte nicht erstellt werden",
     "errorUpdateFailed": "Ereignis konnte nicht aktualisiert werden",
     "errorDeleteFailed": "Ereignis konnte nicht gelöscht werden",
-    "alerts": "Erinnerungen"
+    "alerts": "Erinnerungen",
+    "details": "Details",
+    "when": "Wann",
+    "more": "Mehr",
+    "duration": "Dauer"
   },
   "settings": {
     "title": "Einstellungen",

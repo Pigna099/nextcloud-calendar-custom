@@ -1,52 +1,85 @@
+import { pickInk } from '@/utils/color';
+
 export type WidgetScheme = 'light' | 'dark';
 
 type Hex = `#${string}`;
 
+/**
+ * Widget palettes mirror the app theme's calm surfaces and semantic on-colours.
+ * Keep these values in sync with `src/theme.ts` and with the local palettes in
+ * `surfaces/homeWidget/homeWidget.ios.tsx` (the widget function is serialized
+ * separately, so it carries its own copy).
+ */
 export interface WidgetPalette {
   background: Hex;
   surface: Hex;
+  surfaceRaised: Hex;
   text: Hex;
   textSecondary: Hex;
   textTertiary: Hex;
+  border: Hex;
+  borderStrong: Hex;
   primary: Hex;
   onPrimary: Hex;
+  primarySoft: Hex;
+  primarySoftBorder: Hex;
+  primarySoftText: Hex;
+  talk: Hex;
+  danger: Hex;
+  onDanger: Hex;
+  warning: Hex;
+  onWarning: Hex;
 }
 
 const light: WidgetPalette = {
-  background: '#ffffff',
-  surface: '#f5f5f5',
-  text: '#1a1a1a',
-  textSecondary: '#555555',
-  textTertiary: '#888888',
-  primary: '#109be6',
+  background: '#f5f7f9',
+  surface: '#ffffff',
+  surfaceRaised: '#ffffff',
+  text: '#171b20',
+  textSecondary: '#4d5761',
+  textTertiary: '#626d79',
+  border: '#e2e7ec',
+  borderStrong: '#7f8791',
+  primary: '#08679c',
   onPrimary: '#ffffff',
+  primarySoft: '#e7eff5',
+  primarySoftBorder: '#c5d9e6',
+  primarySoftText: '#0a5d8c',
+  talk: '#0077b8',
+  danger: '#b8322a',
+  onDanger: '#ffffff',
+  warning: '#9a5700',
+  onWarning: '#ffffff',
 };
 
 const dark: WidgetPalette = {
-  background: '#121212',
-  surface: '#1e1e1e',
-  text: '#f1f1f1',
-  textSecondary: '#aaaaaa',
-  textTertiary: '#666666',
-  primary: '#29aef7',
-  onPrimary: '#ffffff',
+  background: '#0e1114',
+  surface: '#171b20',
+  surfaceRaised: '#20262d',
+  text: '#edf1f4',
+  textSecondary: '#b3bec8',
+  textTertiary: '#8e9aa5',
+  border: '#2b333c',
+  borderStrong: '#68727e',
+  primary: '#6cc7f5',
+  onPrimary: '#0b1220',
+  primarySoft: '#152a36',
+  primarySoftBorder: '#244554',
+  primarySoftText: '#9dd4f3',
+  talk: '#5bb9e8',
+  danger: '#f08a84',
+  onDanger: '#2a0b09',
+  warning: '#f0c37a',
+  onWarning: '#2a1c05',
 };
 
 export function widgetPalette(scheme: WidgetScheme): WidgetPalette {
   return scheme === 'dark' ? dark : light;
 }
 
-function parseHex(hex: string): [number, number, number] {
-  let h = hex.replace('#', '');
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  const n = parseInt(h.slice(0, 6), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
+/** WCAG-picked ink for solid event-coloured widget/Live Activity surfaces. */
 export function onEventColor(color: string): Hex {
-  const [r, g, b] = parseHex(color);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  return pickInk(color) as Hex;
 }
 
 export const widgetRadius = { sm: 8, md: 12, lg: 16 } as const;

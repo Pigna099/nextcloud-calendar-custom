@@ -26,7 +26,6 @@ function page(over: Partial<React.ComponentProps<typeof TimeGridPage>> = {}) {
       dates={dates}
       dayIndex={dayIndex}
       hourRowHeight={60}
-      now={new Date(2026, 7, 7, 12, 0)}
       onPressSlot={jest.fn()}
       onPressEvent={jest.fn()}
       onMoveEvent={jest.fn()}
@@ -46,5 +45,11 @@ describe('TimeGridPage', () => {
 
   it('mounts no drag ghost until a drag begins', () => {
     expect(render(page()).queryByTestId('drag-ghost')).toBeNull();
+  });
+
+  it('marks only the column matching today as today', () => {
+    const today = new Date();
+    const { getAllByTestId } = render(page({ dates: [today, new Date(2026, 7, 8)], dayIndex: new Map() }));
+    expect(getAllByTestId('now-indicator')).toHaveLength(1);
   });
 });

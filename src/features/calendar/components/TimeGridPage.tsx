@@ -5,6 +5,9 @@ import { dayKey } from '../utils/grid';
 import type { GridEvent } from '../utils/toGridEvents';
 import { layoutDay, type PositionedEvent } from '../utils/eventLayout';
 import { useEventDrag } from '../hooks/useEventDrag';
+import { useCalendarDensity } from '../hooks/useCalendarDensity';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { useToday } from '../hooks/useToday';
 import { DayColumn } from './DayColumn';
 import { DragGhost } from './DragGhost';
 
@@ -14,7 +17,6 @@ interface Props {
   dates: Date[];
   dayIndex: Map<string, GridEvent[]>;
   hourRowHeight: number;
-  now: Date;
   onPressSlot: (d: Date) => void;
   onPressEvent: (e: GridEvent) => void;
   onMoveEvent?: (event: GridEvent, nextStart: Date, nextEnd: Date) => void;
@@ -24,11 +26,15 @@ function TimeGridPageImpl({
   dates,
   dayIndex,
   hourRowHeight,
-  now,
   onPressSlot,
   onPressEvent,
   onMoveEvent,
 }: Props) {
+  const today = useToday();
+  const todayKey = dayKey(today);
+  const { fontScale } = useCalendarDensity();
+  const reduceMotion = useReduceMotion();
+
   const layoutCache = useRef(new WeakMap<GridEvent[], PositionedEvent[]>());
   const layouts = useMemo(
     () =>
@@ -64,7 +70,9 @@ function TimeGridPageImpl({
             date={date}
             positioned={layouts[i]}
             hourRowHeight={hourRowHeight}
-            now={now}
+            isToday={dayKey(date) === todayKey}
+            fontScale={fontScale}
+            reduceMotion={reduceMotion}
             onPressSlot={onPressSlot}
             onPressEvent={onPressEvent}
             dimmedUid={drag?.columnIndex === i ? drag.event._event.uid : undefined}

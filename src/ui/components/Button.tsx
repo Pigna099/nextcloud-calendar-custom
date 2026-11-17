@@ -5,8 +5,8 @@ import * as Haptics from 'expo-haptics';
 import AnimatedPressable from './AnimatedPressable';
 import Typography from './Typography';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'link';
-type Color = 'primary' | 'danger' | 'text';
+type Variant = 'primary' | 'secondary' | 'soft' | 'ghost' | 'link';
+type Color = 'primary' | 'danger' | 'warning' | 'text';
 type Size = 'small' | 'medium' | 'large';
 type Alignment = 'start' | 'center' | 'end';
 
@@ -54,21 +54,41 @@ function Button({
   ...rest
 }: ButtonProps) {
   const { colors } = useTheme();
-  const accent = color === 'danger' ? colors.danger : color === 'text' ? colors.text : colors.primary;
+  const accent =
+    color === 'danger' ? colors.danger
+    : color === 'warning' ? colors.warning
+    : color === 'text' ? colors.text
+    : colors.primary;
+  const onAccent =
+    color === 'danger' ? colors.onDanger
+    : color === 'warning' ? colors.onWarning
+    : color === 'text' ? colors.background
+    : colors.onPrimary;
+  const softBackground =
+    color === 'danger' ? colors.dangerSoft
+    : color === 'warning' ? colors.warningSoft
+    : colors.primarySoft;
+  const softText =
+    color === 'danger' ? colors.dangerSoftText
+    : color === 'warning' ? colors.warningSoftText
+    : colors.primarySoftText;
 
   const filled = variant === 'primary';
+  const isSoft = variant === 'soft';
   const backgroundColor =
     variant === 'primary' ? accent
     : variant === 'secondary' ? colors.surface
+    : isSoft ? softBackground
     : 'transparent';
   const borderColor =
     variant === 'primary' ? accent
-    : variant === 'secondary' ? colors.border
+    : variant === 'secondary' ? colors.borderStrong
+    : isSoft ? softText
     : variant === 'ghost' ? accent
     : 'transparent';
-  const resolvedLabelColor = labelColor ?? (
-    filled ? 'light' : color === 'danger' ? 'danger' : color === 'text' ? 'text' : 'primary'
-  );
+  const defaultLabelColor = filled ? onAccent : isSoft ? softText : accent;
+  const resolvedLabelColor = labelColor ?? defaultLabelColor;
+  const loaderColor = labelColor ?? defaultLabelColor;
 
   const label = title ?? children;
 
@@ -95,7 +115,7 @@ function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={filled ? (labelColor ?? '#ffffff') : accent} />
+        <ActivityIndicator color={loaderColor} />
       ) : (
         <>
           {icon ? <View>{icon}</View> : null}

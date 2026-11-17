@@ -29,6 +29,22 @@ describe('useCalendarNavigation', () => {
     expect(result.current.fetchDate).toEqual(d2);
   });
 
+  it('month paging updates the visible month without selecting its first day', () => {
+    const { result } = renderHook(() => useCalendarNavigation());
+    const selectedBefore = result.current.date;
+    const targetMonth = new Date(2026, 6, 1);
+
+    act(() => { result.current.onMonthPageChange(targetMonth); });
+
+    expect(result.current.date).toBe(selectedBefore);
+    expect(result.current.visibleMonth.getMonth()).toBe(targetMonth.getMonth());
+    expect(result.current.visibleMonth.getFullYear()).toBe(targetMonth.getFullYear());
+    expect(result.current.fetchDate).not.toEqual(targetMonth);
+
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.fetchDate).toEqual(targetMonth);
+  });
+
   it('setDate updates fetchDate immediately and cancels a pending page change', () => {
     const { result } = renderHook(() => useCalendarNavigation());
     const swiped = new Date('2026-04-01T00:00:00Z');
@@ -83,6 +99,31 @@ describe('useCalendarNavigation', () => {
 
     expect(result.current.viewMode).toBe('day');
     expect(result.current.anchorDate).toEqual(swiped);
+  });
+
+  it('switching from a swiped month focuses the visible month, not a stale day', () => {
+    act(() => { useCalendarStore.setState({ viewMode: 'month' }); });
+    const { result } = renderHook(() => useCalendarNavigation());
+    const july = new Date(2026, 6, 1);
+
+    act(() => { result.current.onMonthPageChange(july); });
+    act(() => { result.current.switchMode('day'); });
+
+    expect(result.current.viewMode).toBe('day');
+    expect(result.current.anchorDate).toEqual(july);
+    expect(result.current.date).toEqual(july);
+  });
+
+  it('selecting the already active month mode does not move the selected day', () => {
+    act(() => { useCalendarStore.setState({ viewMode: 'month' }); });
+    const { result } = renderHook(() => useCalendarNavigation());
+    const before = result.current.date;
+    const jumpBefore = result.current.jump;
+
+    act(() => { result.current.switchMode('month'); });
+
+    expect(result.current.date).toBe(before);
+    expect(result.current.jump).toBe(jumpBefore);
   });
 
   it('in schedule mode, agenda scrolling debounces fetchDate to the visible date', () => {

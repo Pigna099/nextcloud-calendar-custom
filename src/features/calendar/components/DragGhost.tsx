@@ -1,8 +1,9 @@
 import { memo } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import { useTheme } from 'expo-router';
 import type { GridEvent } from '../utils/toGridEvents';
-import { contrastFor } from '../utils/eventInk';
+import { eventChipColorsWithInk } from '../utils/eventInk';
 
 interface Props {
   event: GridEvent;
@@ -23,7 +24,8 @@ function DragGhostImpl({
   resizing,
   width,
 }: Props) {
-  const ink = contrastFor(event.color);
+  const { colors, dark } = useTheme();
+  const chip = eventChipColorsWithInk(event.color, colors.surfaceRaised, dark);
 
   const style = useAnimatedStyle(() =>
     resizing
@@ -40,11 +42,18 @@ function DragGhostImpl({
       pointerEvents="none"
       style={[
         styles.ghost,
-        { width, height: restingHeight, backgroundColor: event.color },
+        {
+          width,
+          height: restingHeight,
+          backgroundColor: chip.background,
+          borderColor: chip.border,
+          borderLeftColor: chip.rail,
+          shadowColor: colors.shadow,
+        },
         style,
       ]}
     >
-      <Text numberOfLines={1} style={[styles.title, { color: ink.text }]}>
+      <Text numberOfLines={1} style={[styles.title, { color: chip.text }]}>
         {event.title}
       </Text>
     </Animated.View>
@@ -60,10 +69,10 @@ const styles = StyleSheet.create({
     left: 0,
     zIndex: 20000,
     borderRadius: 6,
+    borderLeftWidth: 3,
     paddingHorizontal: 4,
     paddingVertical: 1,
     justifyContent: 'flex-start',
-    shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },

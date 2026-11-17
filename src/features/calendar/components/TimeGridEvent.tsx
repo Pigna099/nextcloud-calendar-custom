@@ -1,9 +1,11 @@
 import { memo, useRef } from 'react';
 import { TouchableOpacity, View, StyleSheet, type ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { useTheme } from 'expo-router';
 import { Typography } from '@/ui/components';
 import type { GridEvent } from '../utils/toGridEvents';
-import { contrastFor } from '../utils/eventInk';
+import { eventChipColorsWithInk } from '../utils/eventInk';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
 import { LONG_PRESS_MS } from '../constants';
 
@@ -15,19 +17,39 @@ interface Props {
   widthPct: number;
   zIndex: number;
   hourRowHeight: number;
+  fontScale?: number;
+  reduceMotion?: boolean;
   dimmed?: boolean;
   onPress: (event: GridEvent) => void;
 }
 
-function TimeGridEventImpl({ event, top, height, leftPct, widthPct, zIndex, hourRowHeight, dimmed, onPress }: Props) {
-  const scale = Math.min(Math.max((hourRowHeight - 30) / 170, 0), 1);
-  const titleSize = Math.round(11 + scale * 4);
-  const timeSize = Math.round(9 + scale * 2);
-  const pad = Math.round(2 + scale * 4);
+function TimeGridEventImpl({
+  event, top, height, leftPct, widthPct, zIndex, hourRowHeight,
+  fontScale = 1, reduceMotion = false, dimmed, onPress,
+}: Props) {
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const zoomScale = Math.min(Math.max((hourRowHeight - 30) / 170, 0), 1);
+  // Event cards are bounded by their duration, so let type grow only 25% even
+  // when the rest of the app follows a larger accessibility font scale.
+  const textScale = Math.min(fontScale, 1.25);
+  const titleSize = Math.round((11 + zoomScale * 4) * textScale);
+  const timeSize = Math.round((9 + zoomScale * 2) * textScale);
+  const pad = Math.round((2 + zoomScale * 4) * textScale);
   const color = event.color;
-  const ink = contrastFor(color);
+  const chip = eventChipColorsWithInk(color, theme.colors.surfaceRaised, theme.dark);
   const { formatTime } = useTimeFormat();
   const durationMin = dayjs(event.end).diff(event.start, 'minute');
+
+  const accessibilityLabel = [
+    event.title || t('calendar.noTitle'),
+    `${formatTime(event.start)}–${formatTime(event.end)}`,
+    event._event.location || null,
+  ].filter(Boolean).join(', ');
+
+  // No hitSlop here: the space around a card belongs to the events stacked
+  // above/below it or to the neighbouring day column, so expanding the touch
+  // target would steal their taps.
 
   // A finger that rested here for the long-press window was grabbing the event,
   // not tapping it, so it must not navigate on lift. The drag gesture cannot be
@@ -51,6 +73,9 @@ function TimeGridEventImpl({ event, top, height, leftPct, widthPct, zIndex, hour
   return (
     <TouchableOpacity
       testID={`event-box-${event._event.uid}`}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      activeOpacity={reduceMotion ? 1 : 0.2}
       onPressIn={() => { pressedAt.current = Date.now(); }}
       onPress={() => {
         if (Date.now() - pressedAt.current < LONG_PRESS_MS) onPress(event);
@@ -68,8 +93,10 @@ function TimeGridEventImpl({ event, top, height, leftPct, widthPct, zIndex, hour
           {
             flex: 1,
             marginRight: 3,
-            backgroundColor: color,
-            borderColor: ink.border,
+            backgroundColor: chip.background,
+            borderColor: chip.border,
+            borderLeftColor: chip.rail,
+            borderLeftWidth: 3,
             paddingLeft: leftPct > 0 ? 2 : 3,
             paddingRight: 3,
             paddingVertical: Math.max(pad - 1, 1),
@@ -77,15 +104,15 @@ function TimeGridEventImpl({ event, top, height, leftPct, widthPct, zIndex, hour
         ]}
       >
         {durationMin < 30 ? (
-          <Typography variant="body2" weight="600" color={ink.text} style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.25) }} numberOfLines={1}>
-            {event.title}
+          <Typography allowFontScaling={false} variant="body2" weight="600" color={chip.text} style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.25) }} numberOfLines={1}>
+            {event.title || t('calendar.noTitle')}
           </Typography>
         ) : (
           <>
-            <Typography variant="body2" weight="600" color={ink.text} style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.25) }} numberOfLines={2}>
-              {event.title}
+            <Typography allowFontScaling={false} variant="body2" weight="600" color={chip.text} style={{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.25) }} numberOfLines={2}>
+              {event.title || t('calendar.noTitle')}
             </Typography>
-            <Typography color={ink.subtext} weight="400" style={{ fontSize: timeSize, lineHeight: Math.round(timeSize * 1.25) }} numberOfLines={1}>
+            <Typography allowFontScaling={false} color={chip.textSecondary} weight="400" style={{ fontSize: timeSize, lineHeight: Math.round(timeSize * 1.25) }} numberOfLines={1}>
               {formatTime(event.start)}–{formatTime(event.end)}
             </Typography>
           </>

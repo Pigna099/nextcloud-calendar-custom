@@ -90,7 +90,7 @@ export function QrLoginScanner({ visible, onClose, onScanned }: Props) {
               style={[styles.btn, { backgroundColor: theme.colors.primary }]}
               onPress={() => Linking.openSettings()}
             >
-              <Text style={styles.btnText}>{t('setup.qrOpenSettings')}</Text>
+              <Text style={[styles.btnText, { color: theme.colors.onPrimary }]}>{t('setup.qrOpenSettings')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -131,7 +131,7 @@ export function QrLoginScanner({ visible, onClose, onScanned }: Props) {
                 style={[styles.btn, { backgroundColor: theme.colors.primary, marginTop: 12 }]}
                 onPress={() => { scannedRef.current = false; setScanned(false); setParseError(null); }}
               >
-                <Text style={styles.btnText}>{t('setup.qrTryAgain')}</Text>
+                <Text style={[styles.btnText, { color: theme.colors.onPrimary }]}>{t('setup.qrTryAgain')}</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -178,5 +178,5 @@ const styles = StyleSheet.create({
   errorText: { color: '#ff6b6b', fontSize: 14, textAlign: 'center' },
   permText: { fontSize: 16, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
   btn: { borderRadius: 10, paddingVertical: 13, paddingHorizontal: 28, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  btnText: { fontSize: 15, fontWeight: '600' },
 });

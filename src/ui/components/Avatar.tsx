@@ -33,12 +33,12 @@ function Avatar({ uri, name, size = 40 }: AvatarProps) {
         width: size,
         height: size,
         borderRadius: radius,
-        backgroundColor: colors.primary,
+        backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Typography variant="body2" color="light" style={{ fontSize: size * 0.4, lineHeight: size }}>
+      <Typography variant="body2" color="primarySoftText" style={{ fontSize: size * 0.4, lineHeight: size }}>
         {initials(name)}
       </Typography>
     </View>

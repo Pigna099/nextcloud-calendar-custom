@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import type { ReactElement } from 'react';
 import { render as rtlRender, fireEvent } from '@testing-library/react-native';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { ThemeWrapper } from '../helpers/theme';
+import { lightTheme } from '@/theme';
 
 dayjs.extend(isoWeek);
 
@@ -63,6 +64,14 @@ describe('RecurrencePicker end conditions', () => {
     const { getByText } = render(<Harness initial={{ freq: 'WEEKLY' }} onChange={jest.fn()} />);
     expect(getByText('Ends')).toBeTruthy();
     expect(getByText('Never')).toBeTruthy();
+  });
+
+  it('uses tonal selected states and theme ink instead of hardcoded white', () => {
+    const { getByText } = render(<Harness initial={{ freq: 'WEEKLY' }} onChange={jest.fn()} />);
+
+    expect(StyleSheet.flatten(getByText('Never').props.style).color).toBe(lightTheme.colors.primarySoftText);
+    expect(StyleSheet.flatten(getByText('After').props.style).color).toBe(lightTheme.colors.textSecondary);
+    expect(StyleSheet.flatten(getByText('Never').props.style).color).not.toBe('#fff');
   });
 
   it('sets a default occurrence count when switching to "After"', () => {

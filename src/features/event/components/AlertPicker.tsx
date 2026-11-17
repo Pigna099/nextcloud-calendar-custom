@@ -36,11 +36,14 @@ export function AlertPicker({ value, onChange }: Props) {
             accessibilityState={{ selected: active }}
             style={[
               styles.pill,
-              { backgroundColor: active ? theme.colors.primary : theme.colors.chip },
+              {
+                backgroundColor: active ? theme.colors.primarySoft : theme.colors.chip,
+                borderColor: active ? theme.colors.primarySoftText : theme.colors.borderStrong,
+              },
             ]}
             onPress={select}
           >
-            <Text style={[styles.pillText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+            <Text style={[styles.pillText, { color: active ? theme.colors.primarySoftText : theme.colors.textSecondary }]}>
               {label}
             </Text>
           </TouchableOpacity>
@@ -53,6 +56,6 @@ export function AlertPicker({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: { marginTop: 16 },
   sectionLabel: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
-  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 },
+  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
   pillText: { fontSize: 14 },
 });

@@ -40,20 +40,32 @@ function CalendarFabImpl({ onPress }: Props) {
         <GlassView
           glassEffectStyle="regular"
           isInteractive
-          tintColor={colors.primary}
+          tintColor={colors.primarySoft}
           style={StyleSheet.absoluteFill}
         />
         <Icon size={30}>
-          <Plus color="#ffffff" />
+          <Plus color={colors.primary} />
         </Icon>
       </AnimatedPressable>
     );
   }
 
   return (
-    <AnimatedPressable testID="calendar-fab-new" onPress={onPress} style={[styles.base, styles.solid, { backgroundColor: colors.primary }]}>
+    <AnimatedPressable
+      testID="calendar-fab-new"
+      onPress={onPress}
+      style={[
+        styles.base,
+        styles.solid,
+        {
+          backgroundColor: colors.primarySoft,
+          borderColor: colors.primarySoftBorder,
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
       <Icon size={28}>
-        <Plus color="#ffffff" />
+        <Plus color={colors.primary} />
       </Icon>
     </AnimatedPressable>
   );
@@ -74,10 +86,10 @@ const styles = StyleSheet.create({
     width: SOLID_SIZE,
     height: SOLID_SIZE,
     borderRadius: SOLID_SIZE / 2,
-    elevation: 8,
-    shadowColor: '#000000',
+    borderWidth: 1,
+    elevation: 6,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.18,
     shadowRadius: 4,
   },
 });

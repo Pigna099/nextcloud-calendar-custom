@@ -1,0 +1,138 @@
+name: Build unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "GitHub release tag that receives the IPA"
+        required: false
+        default: "ios-unsigned-latest"
+        type: string
+  push:
+    branches:
+      - ios-unsigned
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build unsigned IPA
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate native iOS project
+        env:
+          EXPO_NO_GIT_STATUS: "1"
+          IOS_BUILD_NUMBER: ${{ github.run_number }}
+        run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install --repo-update
+
+      - name: Build unsigned app
+        id: xcode
+        run: |
+          WORKSPACE=$(find ios -maxdepth 1 -name '*.xcworkspace' | head -n 1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "::error::No Xcode workspace generated"
+            exit 1
+          fi
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json \
+            | jq -r '.workspace.schemes[]' \
+            | grep -viE 'widget|extension|target' \
+            | head -n 1)
+          if [ -z "$SCHEME" ]; then
+            SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json \
+              | jq -r '.workspace.schemes[0]')
+          fi
+          if [ -z "$SCHEME" ] || [ "$SCHEME" = "null" ]; then
+            echo "::error::No Xcode scheme found"
+            exit 1
+          fi
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/ios-build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            EXPANDED_CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build
+
+      - name: Package unsigned IPA
+        id: package
+        run: |
+          APP_PATH=$(find "$RUNNER_TEMP/ios-build/Build/Products/Release-iphoneos" \
+            -maxdepth 1 -name '*.app' | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::No .app bundle produced"
+            exit 1
+          fi
+          VERSION=$(node -p "require('./package.json').version")
+          IPA="NextcloudCalendar-v${VERSION}-unsigned.ipa"
+          rm -rf Payload
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry "$IPA" Payload
+          echo "ipa=$IPA" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: ${{ steps.package.outputs.ipa }}
+          if-no-files-found: error
+
+      - name: Publish downloadable GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag || 'ios-unsigned-latest' }}
+          IPA: ${{ steps.package.outputs.ipa }}
+        run: |
+          NOTES="Unsigned iOS build for iLoader/sideloadly-style signing. This IPA is not signed by Apple."
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$IPA" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$IPA" \
+              --title "iOS unsigned build" \
+              --notes "$NOTES"
+          fi

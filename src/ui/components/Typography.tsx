@@ -23,7 +23,24 @@ const ALIGN = StyleSheet.create({
 });
 
 export type Variant = keyof typeof VARIANTS;
-type Color = 'primary' | 'text' | 'secondary' | 'light' | 'danger';
+type Color =
+  | 'primary'
+  | 'onPrimary'
+  | 'primarySoft'
+  | 'primarySoftText'
+  | 'text'
+  | 'secondary'
+  | 'tertiary'
+  | 'light'
+  | 'danger'
+  | 'onDanger'
+  | 'dangerSoftText'
+  | 'warning'
+  | 'onWarning'
+  | 'warningSoftText'
+  | 'talk'
+  | 'onTalk'
+  | 'talkSoftText';
 type Alignment = keyof typeof ALIGN;
 
 export interface TypographyProps extends TextProps {
@@ -52,10 +69,23 @@ function Typography({
 
   const textColor =
     color === 'primary' ? colors.primary
+    : color === 'onPrimary' ? colors.onPrimary
+    : color === 'primarySoft' ? colors.primarySoft
+    : color === 'primarySoftText' ? colors.primarySoftText
     : color === 'text' ? colors.text
-    : color === 'secondary' ? colors.text
-    : color === 'light' ? '#ffffff'
+    : color === 'secondary' ? colors.textSecondary
+    : color === 'tertiary' ? colors.textTertiary
+    // "light" is the historical name for ink on a filled/coloured surface.
+    : color === 'light' ? colors.onPrimary
     : color === 'danger' ? colors.danger
+    : color === 'onDanger' ? colors.onDanger
+    : color === 'dangerSoftText' ? colors.dangerSoftText
+    : color === 'warning' ? colors.warning
+    : color === 'onWarning' ? colors.onWarning
+    : color === 'warningSoftText' ? colors.warningSoftText
+    : color === 'talk' ? colors.talk
+    : color === 'onTalk' ? colors.onTalk
+    : color === 'talkSoftText' ? colors.talkSoftText
     : color;
 
   return (
@@ -66,7 +96,6 @@ function Typography({
         VARIANTS[variant],
         ALIGN[align],
         { color: textColor },
-        color === 'secondary' && { opacity: 0.5 },
         weight ? { fontWeight: weight } : null,
         italic && styles.italic,
         style,

@@ -64,7 +64,18 @@ Use in production at your own discretion, and pin to a specific commit or tag if
 
 ---
 
-## 🎬 Demo
+## 🍎 iOS unsigned builds (iLoader / sideloading)
+
+The **Build unsigned iOS IPA** GitHub Actions workflow produces an unsigned IPA without Apple signing credentials. It is attached to the `ios-unsigned-latest` GitHub release and is also available as a workflow artifact.
+
+1. Open **Actions → Build unsigned iOS IPA → Run workflow**, or push to the `ios-unsigned` branch.
+2. Download `NextcloudCalendar-<version>-unsigned.ipa` from the release or artifact.
+3. Sign and install it on-device with iLoader.
+
+This IPA is not signed by Apple and cannot be installed as-is. The app version/build number is incremented through `IOS_BUILD_NUMBER` in CI.
+
+---
+
 
 <div align="center">
 

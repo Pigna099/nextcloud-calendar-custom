@@ -1,7 +1,9 @@
 import React from 'react';
 import { render as rtlRender, fireEvent } from '@testing-library/react-native';
+import dayjs from 'dayjs';
 import { ThemeWrapper } from '../helpers/theme';
 import { TimeGridHeader } from '@/features/calendar/components/TimeGridHeader';
+import { useSettingsStore } from '@/stores/settingsStore';
 import type { CalendarEvent } from '@/types';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -20,6 +22,11 @@ const holiday: CalendarEvent = {
 };
 
 describe('TimeGridHeader', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ language: 'en' });
+    dayjs.locale('en');
+  });
+
   it('renders one day number per date', () => {
     const { getByText } = render(
       <TimeGridHeader dates={dates} now={dates[0]} allDayEvents={[]} onPressEvent={jest.fn()} />
@@ -45,6 +52,24 @@ describe('TimeGridHeader', () => {
     fireEvent.press(getByText('Public holiday'));
 
     expect(onPressEvent).toHaveBeenCalledWith(holiday);
+  });
+
+  it('labels a day as a header with its full localized date', () => {
+    const { getByLabelText } = render(
+      <TimeGridHeader dates={dates} now={dates[0]} allDayEvents={[]} onPressEvent={jest.fn()} />
+    );
+    const header = getByLabelText('Monday, 3 August, Today');
+    expect(header.props.accessibilityRole).toBe('header');
+    expect(getByLabelText('Tuesday, 4 August')).toBeTruthy();
+    expect(getByLabelText('Wednesday, 5 August')).toBeTruthy();
+  });
+
+  it('labels all-day chips as buttons with their title and all-day state', () => {
+    const { getByLabelText } = render(
+      <TimeGridHeader dates={dates} now={dates[0]} allDayEvents={[holiday]} onPressEvent={jest.fn()} />
+    );
+    const chip = getByLabelText('Public holiday, All day');
+    expect(chip.props.accessibilityRole).toBe('button');
   });
 
   it('highlights today and nothing else', () => {

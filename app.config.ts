@@ -9,7 +9,7 @@ if (![major, minor, patch].every(Number.isInteger)) {
     );
 }
 
-const versionCode = 10902;
+const versionCode = 10903;
 
 if (versionCode !== major * 10000 + minor * 100 + patch) {
     throw new Error(
@@ -32,6 +32,7 @@ const config: ExpoConfig = {
     ios: {
         supportsTablet: true,
         bundleIdentifier: 'com.soluce.nextcloud-calendar',
+        ...(process.env.IOS_BUILD_NUMBER ? { buildNumber: process.env.IOS_BUILD_NUMBER } : {}),
         icon: './assets/icon-ios.icon',
         infoPlist: {
             CFBundleDisplayName: 'Nextcloud Calendar',
@@ -51,9 +52,13 @@ const config: ExpoConfig = {
     android: {
         package: 'com.soluce.nextcloudcalendar',
         versionCode,
+        permissions: [
+            'android.permission.SCHEDULE_EXACT_ALARM',
+            'android.permission.USE_EXACT_ALARM',
+        ],
         adaptiveIcon: {
             foregroundImage: './assets/adaptive-icon.png',
-            backgroundColor: '#109be6',
+            backgroundColor: '#08679c',
         },
         softwareKeyboardLayoutMode: 'resize',
     },
@@ -99,9 +104,9 @@ const config: ExpoConfig = {
                 image: './assets/splash-icon.png',
                 imageWidth: 200,
                 resizeMode: 'contain',
-                backgroundColor: '#109be6',
+                backgroundColor: '#08679c',
                 dark: {
-                    backgroundColor: '#109be6',
+                    backgroundColor: '#08679c',
                 },
             },
         ],

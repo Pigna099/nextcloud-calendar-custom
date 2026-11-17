@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, PressableProps } from 'react-native';
 import Reanimated, {
   useSharedValue,
@@ -7,8 +7,8 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { useSettingsStore } from '@/stores/settingsStore';
 import { haptic } from '@/utils/haptics';
+import { useReduceMotion } from '@/features/calendar/hooks/useReduceMotion';
 
 const AnimatedPressableBase = Reanimated.createAnimatedComponent(Pressable);
 
@@ -30,13 +30,19 @@ function AnimatedPressable({
   ...rest
 }: AnimatedPressableProps) {
   const scale = useSharedValue(1);
-  const reduceMotion = useSettingsStore((s) => s.reduceMotion);
+  const reduceMotion = useReduceMotion();
 
   const shouldAnimate = animated && !reduceMotion;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  // If reduce-motion is switched on mid-press, do not leave the button stuck
+  // at its pressed scale.
+  useEffect(() => {
+    if (reduceMotion) scale.value = 1;
+  }, [reduceMotion, scale]);
 
   return (
     <AnimatedPressableBase

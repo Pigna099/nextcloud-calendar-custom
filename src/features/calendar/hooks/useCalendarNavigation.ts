@@ -7,12 +7,21 @@ import { isCalMode } from '../constants';
 
 const FETCH_DATE_DEBOUNCE_MS = 300;
 
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function sameMonth(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
 export function useCalendarNavigation() {
   const viewMode = useCalendarStore((s) => s.viewMode);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
   const isCalendarMode = isCalMode(viewMode);
 
   const [date, setDateState] = useState(() => new Date());
+  const [visibleMonth, setVisibleMonthState] = useState(() => startOfMonth(date));
   const [anchorDate, setAnchorDate] = useState(date);
   const [fetchDate, setFetchDate] = useState(date);
   const [agendaVisibleDate, setAgendaVisibleDate] = useState(date);
@@ -24,6 +33,7 @@ export function useCalendarNavigation() {
   ).current;
 
   const dateRef = useRef(date); dateRef.current = date;
+  const visibleMonthRef = useRef(visibleMonth); visibleMonthRef.current = visibleMonth;
   const viewModeRef = useRef(viewMode); viewModeRef.current = viewMode;
   const agendaVisibleDateRef = useRef(agendaVisibleDate);
   agendaVisibleDateRef.current = agendaVisibleDate;
@@ -31,12 +41,19 @@ export function useCalendarNavigation() {
   const setDate = useCallback((d: Date) => {
     fetchDebounce.cancel();
     setDateState(d);
+    setVisibleMonthState(startOfMonth(d));
     setFetchDate(d);
     setJump((j) => ({ nonce: j.nonce + 1, target: d }));
   }, [fetchDebounce]);
 
   const onPageChange = useCallback((d: Date) => {
     setDateState(d);
+    setVisibleMonthState(startOfMonth(d));
+    fetchDebounce.call(d);
+  }, [fetchDebounce]);
+
+  const onMonthPageChange = useCallback((d: Date) => {
+    setVisibleMonthState(startOfMonth(d));
     fetchDebounce.call(d);
   }, [fetchDebounce]);
 
@@ -48,12 +65,19 @@ export function useCalendarNavigation() {
   }, [viewMode, agendaVisibleDate, fetchDebounce]);
 
   const switchMode = useCallback((target: ViewMode) => {
-    const focus = viewModeRef.current === 'schedule'
+    const sourceMode = viewModeRef.current;
+    if (target === sourceMode) return;
+    const focus = sourceMode === 'schedule'
       ? agendaVisibleDateRef.current
-      : dateRef.current;
+      : sourceMode === 'month'
+        ? (sameMonth(dateRef.current, visibleMonthRef.current) ? dateRef.current : visibleMonthRef.current)
+        : dateRef.current;
     if (target !== 'schedule') {
       setAnchorDate(focus);
       setDate(focus);
+    } else if (sourceMode === 'month') {
+      setDate(focus);
+      setAgendaVisibleDate(focus);
     }
     setViewMode(target);
   }, [setViewMode, setDate]);
@@ -71,6 +95,7 @@ export function useCalendarNavigation() {
     viewMode,
     isCalendarMode,
     date,
+    visibleMonth,
     anchorDate,
     jump,
     fetchDate,
@@ -81,5 +106,6 @@ export function useCalendarNavigation() {
     switchMode,
     goToday,
     onPageChange,
+    onMonthPageChange,
   };
 }

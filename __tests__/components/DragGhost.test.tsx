@@ -2,6 +2,7 @@ import React from 'react';
 import { render as rtlRender } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 import { ThemeWrapper } from '../helpers/theme';
+import { DARK_INK } from '@/utils/color';
 import { DragGhost } from '@/features/calendar/components/DragGhost';
 import type { GridEvent } from '@/features/calendar/utils/toGridEvents';
 import type { CalendarEvent } from '@/types';
@@ -51,9 +52,10 @@ describe('DragGhost', () => {
     expect(flat.borderWidth ?? 0).toBe(0);
   });
 
-  it('carries the event colour', () => {
+  it('keeps the event colour as a rail and uses a quieter fill', () => {
     const flat = StyleSheet.flatten(render(ghost()).getByTestId('drag-ghost').props.style);
-    expect(flat.backgroundColor).toBe('#0082c9');
+    expect(flat.borderLeftColor).toBe('#0082c9');
+    expect(flat.backgroundColor).not.toBe('#0082c9');
   });
 
   it('pins the title to the top, as the resting card draws it', () => {
@@ -61,17 +63,10 @@ describe('DragGhost', () => {
     expect(flat.justifyContent).toBe('flex-start');
   });
 
-  it('picks title ink colour from the event background luminance', () => {
-    const darkGhost = render(ghost('#0082c9'));
-    const darkTitle = darkGhost.getByText('Standup');
-    const darkTitleFlat = StyleSheet.flatten(darkTitle.props.style);
+  it('uses theme ink for the dragged title', () => {
+    const title = render(ghost('#ffe8a3')).getByText('Standup');
+    const flat = StyleSheet.flatten(title.props.style);
 
-    const paleGhost = render(ghost('#ffe8a3'));
-    const paleTitle = paleGhost.getByText('Standup');
-    const paleTitleFlat = StyleSheet.flatten(paleTitle.props.style);
-
-    expect(darkTitleFlat.color).not.toBe(paleTitleFlat.color);
-    expect(paleTitleFlat.color).toBe('#1c1c1e');
-    expect(darkTitleFlat.color).toBe('#ffffff');
+    expect(flat.color).toBe(DARK_INK);
   });
 });

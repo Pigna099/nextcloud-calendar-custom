@@ -1,7 +1,8 @@
-import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'expo-router';
 import { useAccountStore } from '@/stores/accountStore';
+import { Toggle } from '@/ui/components';
 import type { TalkRoomType } from '@/types';
 
 interface Props {
@@ -29,11 +30,9 @@ export function TalkToggle({ value, onChange, roomType, onRoomTypeChange }: Prop
             </Text>
           )}
         </View>
-        <Switch
+        <Toggle
           value={value}
           onValueChange={onChange}
-          trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-          thumbColor="#fff"
         />
       </View>
 
@@ -46,11 +45,14 @@ export function TalkToggle({ value, onChange, roomType, onRoomTypeChange }: Prop
                 key={roomTypeOption}
                 style={[
                   styles.typePill,
-                  { backgroundColor: active ? theme.colors.primary : theme.colors.chip },
+                  {
+                    backgroundColor: active ? theme.colors.primarySoft : theme.colors.chip,
+                    borderColor: active ? theme.colors.primarySoftText : theme.colors.borderStrong,
+                  },
                 ]}
                 onPress={() => onRoomTypeChange(roomTypeOption)}
               >
-                <Text style={[styles.typePillText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+                <Text style={[styles.typePillText, { color: active ? theme.colors.primarySoftText : theme.colors.textSecondary }]}>
                   {roomTypeOption === 'private' ? t('event.talkInviteOnly') : t('event.talkPublicLink')}
                 </Text>
               </TouchableOpacity>
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 16 },
   hint: { fontSize: 13, marginTop: 4 },
   typeRow: { marginTop: 10, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  typePill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14 },
+  typePill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14, borderWidth: 1 },
   typePillText: { fontSize: 13, fontWeight: '500' },
   typeHint: { fontSize: 12, marginLeft: 4 },
 });

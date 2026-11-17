@@ -2,7 +2,7 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
 import { syncCalendars, syncVisibleRange } from '@/database/sync';
-import { scheduleEventAlerts } from '@/features/notifications/scheduleAlerts';
+import { ALERT_HORIZON_DAYS, scheduleEventAlerts } from '@/features/notifications/scheduleAlerts';
 import { getActiveAccountId, loadAccounts } from '@/services/nextcloud/auth';
 
 import {useSettingsStore} from '@/stores/settingsStore';
@@ -14,7 +14,7 @@ export const WIDGET_BACKGROUND_TASK = 'widget-agenda-refresh';
 
 const MINIMUM_INTERVAL_MINUTES = 15;
 
-const WINDOW_DAYS = 7;
+const WINDOW_DAYS = ALERT_HORIZON_DAYS;
 
 export async function runBackgroundWidgetSync(now: Date = new Date()): Promise<void> {
   const accountId = await getActiveAccountId();

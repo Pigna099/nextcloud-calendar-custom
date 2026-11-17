@@ -1,18 +1,47 @@
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  let h = hex.replace('#', '');
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  const n = parseInt(h.slice(0, 6), 16);
-  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+import { alpha, LIGHT_INK, mix, parseHexColor, pickInk, toHexColor } from '@/utils/color';
+
+export { mix as mixColor } from '@/utils/color';
+
+/**
+ * Tinted event surface. The hue stays recognisable in the rail and border, but
+ * the fill is pulled toward the surrounding surface so rows read as calendar
+ * colour instead of solid paint. Shape is unchanged for existing callers.
+ */
+export function eventChipColors(color: string, surface: string, dark: boolean) {
+  const background = mix(color, surface, dark ? 0.24 : 0.1);
+  const border = mix(color, background, dark ? 0.48 : 0.38);
+  const parsed = parseHexColor(color);
+  const rail = parsed ? toHexColor(parsed) : surface;
+
+  return { background, border, rail };
 }
 
+/** WCAG ink for a tinted chip fill. */
+export function eventChipInk(background: string) {
+  const text = pickInk(background);
+  return {
+    text,
+    textSecondary: mix(text, background, 0.78),
+  };
+}
+
+/** Convenience for surfaces that need both the tint and its readable ink. */
+export function eventChipColorsWithInk(color: string, surface: string, dark: boolean) {
+  const chip = eventChipColors(color, surface, dark);
+  return { ...chip, ...eventChipInk(chip.background) };
+}
+
+/**
+ * Ink for a solid event-coloured surface. Kept for callers that treat an event
+ * colour as a full fill; the shape is unchanged, but the ink is now chosen by
+ * WCAG contrast rather than a perceived-brightness cutoff.
+ */
 export function contrastFor(hex: string) {
-  try {
-    const { r, g, b } = hexToRgb(hex);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.62
-      ? { text: '#1c1c1e', subtext: 'rgba(0,0,0,0.6)', border: 'rgba(0,0,0,0.14)' }
-      : { text: '#ffffff', subtext: 'rgba(255,255,255,0.85)', border: 'rgba(255,255,255,0.35)' };
-  } catch {
-    return { text: '#ffffff', subtext: 'rgba(255,255,255,0.85)', border: 'rgba(255,255,255,0.35)' };
-  }
+  const ink = pickInk(hex);
+  const light = ink === LIGHT_INK;
+  return {
+    text: ink,
+    subtext: alpha(ink, light ? 0.85 : 0.62),
+    border: alpha(ink, light ? 0.35 : 0.16),
+  };
 }

@@ -284,11 +284,14 @@ export function RecurrencePicker({ value, onChange, dtstart, allDay = false }: P
                   key={day}
                   style={[
                     styles.dayChip,
-                    { backgroundColor: active ? theme.colors.primary : theme.colors.chip },
+                    {
+                      backgroundColor: active ? theme.colors.primarySoft : theme.colors.chip,
+                      borderColor: active ? theme.colors.primarySoftText : theme.colors.borderStrong,
+                    },
                   ]}
                   onPress={() => toggleByDay(day)}
                 >
-                  <Text style={[styles.dayChipText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+                  <Text style={[styles.dayChipText, { color: active ? theme.colors.primarySoftText : theme.colors.textSecondary }]}>
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -411,11 +414,14 @@ export function RecurrencePicker({ value, onChange, dtstart, allDay = false }: P
                   key={mode}
                   style={[
                     styles.pill,
-                    { backgroundColor: active ? theme.colors.primary : theme.colors.chip },
+                    {
+                      backgroundColor: active ? theme.colors.primarySoft : theme.colors.chip,
+                      borderColor: active ? theme.colors.primarySoftText : theme.colors.borderStrong,
+                    },
                   ]}
                   onPress={() => handleEndModeSelect(mode)}
                 >
-                  <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.pillText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.pillText, { color: active ? theme.colors.primarySoftText : theme.colors.textSecondary }]}>
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -484,10 +490,10 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
   subLabel: { fontSize: 12, marginBottom: 6, marginTop: 8 },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
+  pill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1 },
   pillText: { fontSize: 13 },
   dayRow: { flexDirection: 'row', gap: 8 },
-  dayChip: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  dayChip: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   dayChipText: { fontSize: 12, fontWeight: '600' },
   patternRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },
   patternLabel: { fontSize: 14 },

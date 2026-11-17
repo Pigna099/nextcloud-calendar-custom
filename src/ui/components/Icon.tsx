@@ -1,6 +1,7 @@
 import React, { memo, type ReactElement } from 'react';
 import { View, ViewProps } from 'react-native';
 import { useTheme } from 'expo-router';
+import { pickInk } from '@/utils/color';
 
 interface IconProps extends ViewProps {
   children?: React.ReactNode;
@@ -32,7 +33,13 @@ function injectProps(children: React.ReactNode, color: string, size: number): Re
 function Icon({ children, color, size = 24, opacity, style, ...rest }: IconProps) {
   const { colors } = useTheme();
   const chip = Boolean(color);
-  const glyphColor = chip ? '#ffffff' : colors.text;
+  const semanticInk =
+    color === colors.primary || color === colors.chipActive ? colors.onPrimary
+    : color === colors.danger ? colors.onDanger
+    : color === colors.warning ? colors.onWarning
+    : color === colors.talk ? colors.onTalk
+    : null;
+  const glyphColor = chip ? semanticInk ?? pickInk(color as string) : colors.text;
 
   return (
     <View

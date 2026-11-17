@@ -22,11 +22,9 @@ function CalendarDrawerRowImpl({
   const { colors } = useTheme();
   const { t } = useTranslation();
 
-  const bellColor = !visible
-    ? colors.textTertiary
-    : notifies
-      ? colors.primary
-      : colors.textSecondary;
+  // Keep the bells neutral: the filled/slashed icon and the switch already
+  // communicate state without adding a column of blue accents.
+  const bellColor = visible && notifies ? colors.textSecondary : colors.textTertiary;
 
   const isBirthday = calendar.slug === BIRTHDAY_CALENDAR_SLUG;
 
@@ -47,7 +45,8 @@ function CalendarDrawerRowImpl({
       trailing={
         <View style={styles.controls}>
           <IconButton
-            size={36}
+            testID={`calendar-drawer-notifications-${calendar.displayName}`}
+            size={44}
             variant="plain"
             disabled={!visible}
             onPress={onToggleNotifications}
@@ -63,6 +62,7 @@ function CalendarDrawerRowImpl({
             testID={`calendar-drawer-visibility-${calendar.displayName}`}
             value={visible}
             onValueChange={onToggleVisibility}
+            hitSlop={{ top: 8, bottom: 8 }}
             accessibilityLabel={t('calendar.calendarVisibility', { name: calendar.displayName })}
           />
         </View>

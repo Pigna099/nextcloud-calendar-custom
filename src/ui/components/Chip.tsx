@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { useTheme } from 'expo-router';
+import { mix, pickInk } from '@/utils/color';
 import AnimatedPressable from './AnimatedPressable';
 import Typography from './Typography';
 
@@ -20,12 +21,20 @@ interface ChipProps {
 function Chip({
   active = false, onPress, icon, disabled = false, fullWidth = false, rounded = false, small = false, activeColor, children, testID,
 }: ChipProps) {
-  const { colors, radius } = useTheme();
+  const { colors, radius, dark } = useTheme();
   const activeBg = activeColor ?? colors.chipActive;
+  const isThemeAccent = activeBg === colors.chipActive;
+  // Selection is tonal: the accent identifies the control, but the fill stays
+  // close to the surrounding surface instead of becoming a saturated block.
+  const activeFill = isThemeAccent
+    ? colors.primarySoft
+    : mix(activeBg, colors.surface, dark ? 0.22 : 0.12);
+  const activeInk = isThemeAccent ? colors.primarySoftText : pickInk(activeFill);
 
   return (
     <AnimatedPressable
       testID={testID}
+      accessibilityRole="button"
       accessibilityState={{ selected: active, disabled }}
       onPress={onPress}
       disabled={disabled}
@@ -35,9 +44,9 @@ function Chip({
         small && styles.chipSmall,
         {
           borderRadius: rounded ? radius.pill : radius.sm,
-          backgroundColor: active ? activeBg : colors.surface,
+          backgroundColor: active ? activeFill : colors.chip,
           borderWidth: small ? 1 : 1.5,
-          borderColor: active ? activeBg : colors.border,
+          borderColor: active ? activeBg : colors.borderStrong,
           opacity: disabled ? 0.5 : 1,
           flex: fullWidth ? 1 : undefined,
         },
@@ -45,7 +54,7 @@ function Chip({
     >
       {icon}
       {typeof children === 'string' ? (
-        <Typography variant={small ? 'caption' : 'body2'} align="center" nowrap color={active ? 'light' : 'secondary'}>
+        <Typography variant={small ? 'caption' : 'body2'} align="center" nowrap color={active ? activeInk : 'secondary'}>
           {children}
         </Typography>
       ) : (

@@ -8,7 +8,7 @@ interface SpinnerProps extends Omit<ActivityIndicatorProps, 'color'> {
 
 function Spinner({ color = 'primary', ...rest }: SpinnerProps) {
   const { colors } = useTheme();
-  const resolved = color === 'text' ? colors.text : color === 'secondary' ? colors.text : colors.primary;
+  const resolved = color === 'text' ? colors.text : color === 'secondary' ? colors.textSecondary : colors.primary;
   return <ActivityIndicator {...rest} color={resolved} />;
 }
 

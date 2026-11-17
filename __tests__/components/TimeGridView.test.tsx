@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { AccessibilityInfo, Dimensions, StyleSheet } from 'react-native';
 import { render as rtlRender } from '@testing-library/react-native';
 
 import type { SharedValue } from 'react-native-reanimated';
@@ -7,10 +7,8 @@ import { ThemeWrapper } from '../helpers/theme';
 import { TimeGridView } from '@/features/calendar/components/TimeGridView';
 import { toGridEvents } from '@/features/calendar/utils/toGridEvents';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { calendarDensityFor } from '@/features/calendar/hooks/useCalendarDensity';
 import {
-  ALL_DAY_PAD,
-  ALL_DAY_ROW_HEIGHT,
-  DAY_HEADER_HEIGHT,
   dayKey,
   pageFocusDate,
 } from '@/features/calendar/utils/grid';
@@ -81,6 +79,13 @@ describe('TimeGridView', () => {
   beforeEach(() => {
     mockCapturedPagerProps = [];
     mockSetPage.mockClear();
+    useSettingsStore.setState({ reduceMotion: false });
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    useSettingsStore.setState({ reduceMotion: false });
+    jest.restoreAllMocks();
   });
 
   // Regression: all views stay mounted, so a day selection in month view bumps
@@ -171,8 +176,34 @@ describe('TimeGridView', () => {
       view({ mode: 'week', weekStartsOn: 1, anchorDate, activeDate, allDayEvents: [allDay1, allDay2] })
     );
 
+    const density = calendarDensityFor(Dimensions.get('window').fontScale);
     const flat = StyleSheet.flatten(getByTestId('time-grid-header-row').props.style);
-    expect(flat.height).toBe(DAY_HEADER_HEIGHT + 2 * ALL_DAY_ROW_HEIGHT + ALL_DAY_PAD);
+    expect(flat.height).toBe(
+      density.gridDayHeaderHeight
+      + 2 * (density.allDayChipHeight + density.allDayChipGap)
+      + density.allDayPad
+    );
+  });
+
+  it('animates a page jump when motion is allowed', () => {
+    useSettingsStore.setState({ reduceMotion: false });
+    const jumpTarget = new Date(2026, 7, 14); // one page forward
+    const { rerender } = render(view({ active: false }));
+
+    rerender(view({ active: true, jump: { nonce: 1, target: jumpTarget } }));
+
+    expect(mockSetPage).toHaveBeenLastCalledWith(1, { animated: true });
+  });
+
+  it('skips the page-jump animation when reduce motion is on', () => {
+    useSettingsStore.setState({ reduceMotion: true });
+    const jumpTarget = new Date(2026, 7, 14); // one page forward
+    const { rerender } = render(view({ active: false }));
+
+    rerender(view({ active: true, jump: { nonce: 1, target: jumpTarget } }));
+
+    expect(mockSetPage).toHaveBeenLastCalledWith(1, { animated: false });
+    useSettingsStore.setState({ reduceMotion: false });
   });
 
   it('wires the pager index through pageFocusDate to onPageChange', () => {

@@ -11,9 +11,9 @@ function Toggle({ value, onValueChange, disabled, ...rest }: SwitchProps) {
       value={value}
       onValueChange={onValueChange}
       disabled={disabled}
-      trackColor={{ false: colors.border, true: colors.primary }}
-      thumbColor="#ffffff"
-      ios_backgroundColor={colors.border}
+      trackColor={{ false: colors.borderStrong, true: colors.primary }}
+      thumbColor={value ? colors.onPrimary : colors.surfaceRaised}
+      ios_backgroundColor={colors.borderStrong}
     />
   );
 }

@@ -26,7 +26,6 @@ function gridEvent(uid: string): GridEvent {
 }
 
 const dates = [new Date(2026, 7, 7)];
-const now = new Date(2026, 7, 7, 12, 0);
 
 describe('TimeGridPage', () => {
   beforeEach(() => {
@@ -41,7 +40,6 @@ describe('TimeGridPage', () => {
         dates={dates}
         dayIndex={new Map([['2026-08-07', slices]])}
         hourRowHeight={60}
-        now={now}
         onPressSlot={jest.fn()}
         onPressEvent={jest.fn()}
       />
@@ -53,7 +51,6 @@ describe('TimeGridPage', () => {
         dates={dates}
         dayIndex={new Map([['2026-08-07', slices]])}
         hourRowHeight={60}
-        now={now}
         onPressSlot={jest.fn()}
         onPressEvent={jest.fn()}
       />
@@ -69,7 +66,6 @@ describe('TimeGridPage', () => {
         dates={dates}
         dayIndex={new Map([['2026-08-07', [gridEvent('a')]]])}
         hourRowHeight={60}
-        now={now}
         onPressSlot={jest.fn()}
         onPressEvent={jest.fn()}
       />
@@ -81,7 +77,6 @@ describe('TimeGridPage', () => {
         dates={dates}
         dayIndex={new Map([['2026-08-07', [gridEvent('a'), gridEvent('b')]]])}
         hourRowHeight={60}
-        now={now}
         onPressSlot={jest.fn()}
         onPressEvent={jest.fn()}
       />

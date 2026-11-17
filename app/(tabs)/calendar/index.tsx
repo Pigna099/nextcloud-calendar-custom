@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useRef } from 'react';
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -12,6 +12,7 @@ import { ViewContainer, Spinner } from '@/ui/components';
 import { CalendarDrawer } from '@/features/calendar/components/CalendarDrawer';
 import { OfflineBanner } from '@/features/calendar/components/OfflineBanner';
 import { MonthDayView } from '@/features/calendar/components/MonthDayView';
+import { CalendarSearchSheet } from '@/features/calendar/components/CalendarSearchSheet';
 import { AgendaView } from '@/features/calendar/components/AgendaView';
 import { createNavigationGuard } from '@/utils/navigationGuard';
 import type { CalendarEvent, RecurrenceEditScope } from '@/types';
@@ -47,7 +48,7 @@ export default function CalendarScreen() {
   const toggleCalendarNotifications = useCalendarStore((s) => s.toggleCalendarNotifications);
 
   const nav = useCalendarNavigation();
-  const { viewMode, date, fetchDate, agendaVisibleDate } = nav;
+  const { viewMode, date, visibleMonth, fetchDate, agendaVisibleDate } = nav;
 
   const deferredViewMode = useDeferredValue(viewMode);
   const deferredDate = useDeferredValue(date);
@@ -64,6 +65,7 @@ export default function CalendarScreen() {
   } = useCalendarData(fetchDate, viewMode === 'schedule');
   const insets = useSafeAreaInsets();
   const drawer = useCalendarDrawer();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const calendarEvents = useMemo(() => toGridEvents(allEvents), [allEvents]);
 
@@ -125,16 +127,20 @@ export default function CalendarScreen() {
 
   const isToday = viewMode === 'schedule'
     ? dayjs(agendaVisibleDate).isSame(dayjs(), 'day')
-    : dayjs(date).isSame(dayjs(), 'day');
+    : viewMode === 'month'
+      ? dayjs(visibleMonth).isSame(dayjs(), 'month') && dayjs(date).isSame(dayjs(), 'day')
+      : dayjs(date).isSame(dayjs(), 'day');
 
   const headerTitle = useMemo(() => {
-    const d = dayjs(viewMode === 'schedule' ? agendaVisibleDate : date);
+    const d = dayjs(
+      viewMode === 'schedule' ? agendaVisibleDate : viewMode === 'month' ? visibleMonth : date,
+    );
     const monthYear = d.locale(language).format('MMMM YYYY');
     if (viewMode === 'week' || viewMode === '3days' || viewMode === 'day') {
       return `${monthYear}  ·  ${t('calendar.weekAbbr')}${d.isoWeek()}`;
     }
     return monthYear;
-  }, [date, agendaVisibleDate, viewMode, language, t]);
+  }, [date, visibleMonth, agendaVisibleDate, viewMode, language, t]);
 
   if (calendarApp === 'unconfigured') {
     return <CalendarUnavailable />;
@@ -147,6 +153,7 @@ export default function CalendarScreen() {
         isToday={isToday}
         viewMode={viewMode}
         onOpenDrawer={drawer.openDrawer}
+        onOpenSearch={() => setSearchOpen(true)}
         onToday={nav.goToday}
         onSwitchMode={nav.switchMode}
       />
@@ -160,8 +167,10 @@ export default function CalendarScreen() {
             events={allEvents}
             weekStartsOn={deferredWeekStartsOn}
             jump={nav.jump}
+            active={deferredViewMode === 'month'}
+            loading={showSmallLoader}
             onSelectDate={nav.setDate}
-            onMonthChange={nav.onPageChange}
+            onMonthChange={nav.onMonthPageChange}
             onPressEvent={handlePressEventFromMonth}
             onPressCell={handlePressCell}
           />
@@ -208,6 +217,13 @@ export default function CalendarScreen() {
 
       {showFullOverlay && <CalendarLoadingOverlay label={t('calendar.loadingCalendar')} />}
       {showSmallLoader && <Spinner size="small" color="secondary" style={styles.smallLoader} />}
+
+      <CalendarSearchSheet
+        visible={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectDate={nav.setDate}
+        onPressEvent={handlePressEventFromMonth}
+      />
 
       <CalendarFab onPress={() => navGuard(() => router.push('/event/new'))} />
 

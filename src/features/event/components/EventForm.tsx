@@ -16,6 +16,7 @@ import { isWritableCalendar } from '@/utils/calendars';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
 import { getNativePickerLocale } from '@/utils/i18n';
 import { AlertPicker } from './AlertPicker';
+import { FormSection } from './FormSection';
 import { RecurrencePicker } from './RecurrencePicker';
 import { Stack, Typography, TextField, DateField, Chip, Toggle } from '@/ui/components';
 import type { CalendarMeta, Attendee, CreateEventInput, RecurrenceRule, TalkRoomType, Account } from '@/types';
@@ -193,7 +194,7 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     }
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     Keyboard.dismiss();
     setTitleError(null);
     setCalendarError(null);
@@ -210,7 +211,7 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     const willAlert = alarms === undefined
       ? (allDay ? allDayAlerts : timedAlerts).length > 0
       : alarms.length > 0;
-    if (willAlert) void requestAlertPermission();
+    if (willAlert) await requestAlertPermission();
 
     onSubmit({
       summary: summary.trim(), calendarId, color, dtstart, dtend, allDay,
@@ -283,6 +284,28 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
     ? androidStep.partial
     : androidStep?.target === 'start' ? dtstart : dtend;
 
+  function formatDuration(minutes: number) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    if (hours === 0) return `${remainder}${t('widget.durationMinute')}`;
+    if (remainder === 0) return `${hours}${t('widget.durationHour')}`;
+    return `${hours}${t('widget.durationHour')} ${remainder}${t('widget.durationMinute')}`;
+  }
+
+  const durationMinutes = allDay ? 0 : dayjs(dtend).diff(dtstart, 'minute');
+  const durationHint = durationMinutes > 0
+    ? `${t('event.duration', { defaultValue: 'Duration' })} · ${formatDuration(durationMinutes)}`
+    : null;
+
+  const moreSummaryParts: string[] = [];
+  if (location.trim()) moreSummaryParts.push(location.trim());
+  if (description.trim()) moreSummaryParts.push(t('event.description'));
+  if (attendees.length > 0) moreSummaryParts.push(`${t('event.attendees')} (${attendees.length})`);
+  if (withTalkRoom) moreSummaryParts.push(t('event.talkCreateRoom'));
+  const moreSummary = moreSummaryParts.length > 0
+    ? moreSummaryParts.join(' · ')
+    : [t('event.location'), t('event.description'), t('event.attendees')].join(' · ');
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
     <ScrollView
@@ -293,169 +316,197 @@ export const EventForm = forwardRef<EventFormHandle, Props>(function EventForm({
       keyboardDismissMode="none"
       contentInsetAdjustmentBehavior="automatic"
     >
-      <Stack gap={16}>
-        <View onLayout={(e) => onFieldLayout('title', e)}>
-          <TextField
-            testID="event-form-title"
-            label={t('event.titleLabel')}
-            value={summary}
-            onChangeText={(v) => { setSummary(v); if (titleError) setTitleError(null); }}
-            placeholder={t('event.titlePlaceholder')}
-            error={titleError ?? undefined}
-            onFocus={() => scrollToField('title')}
-          />
-        </View>
+      <Stack gap={28}>
+        <FormSection
+          testID="event-form-section-details"
+          title={t('event.details', { defaultValue: 'Details' })}
+        >
+          <View onLayout={(e) => onFieldLayout('title', e)}>
+            <TextField
+              testID="event-form-title"
+              label={t('event.titleLabel')}
+              value={summary}
+              onChangeText={(v) => { setSummary(v); if (titleError) setTitleError(null); }}
+              placeholder={t('event.titlePlaceholder')}
+              error={titleError ?? undefined}
+              onFocus={() => scrollToField('title')}
+            />
+          </View>
 
-        <Stack gap={8}>
-          <Typography variant="body2" color="secondary">{t('event.calendar')}</Typography>
-          {writableCalendars.length === 0 && (
-            <Typography variant="caption" color="danger">{t('event.noWritableCalendars')}</Typography>
-          )}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.chipRow}>
-            {writableCalendars.map((cal) => (
-              <Chip
-                key={cal.id}
-                rounded
-                active={calendarId === cal.id}
-                activeColor={cal.color}
-                disabled={disableCalendarChange}
-                onPress={() => { setCalendarId(cal.id); if (calendarError) setCalendarError(null); }}
-              >
-                {cal.displayName}
-              </Chip>
-            ))}
-          </ScrollView>
-          {calendarError ? (
-            <Typography variant="caption" color="danger">{calendarError}</Typography>
-          ) : null}
-          {disableCalendarChange && (
-            <Typography variant="caption" color="secondary">{t('event.calendarLockedRecurring')}</Typography>
-          )}
-        </Stack>
+          <Stack gap={8}>
+            <Typography variant="body2" color="secondary">{t('event.calendar')}</Typography>
+            {writableCalendars.length === 0 && (
+              <Typography variant="caption" color="danger">{t('event.noWritableCalendars')}</Typography>
+            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.chipRow}>
+              {writableCalendars.map((cal) => (
+                <Chip
+                  key={cal.id}
+                  rounded
+                  active={calendarId === cal.id}
+                  activeColor={cal.color}
+                  disabled={disableCalendarChange}
+                  onPress={() => { setCalendarId(cal.id); if (calendarError) setCalendarError(null); }}
+                >
+                  {cal.displayName}
+                </Chip>
+              ))}
+            </ScrollView>
+            {calendarError ? (
+              <Typography variant="caption" color="danger">{calendarError}</Typography>
+            ) : null}
+            {disableCalendarChange && (
+              <Typography variant="caption" color="secondary">{t('event.calendarLockedRecurring')}</Typography>
+            )}
+          </Stack>
 
-        <Stack gap={8}>
-          <Typography variant="body2" color="secondary">{t('event.color')}</Typography>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.colorRow}
-          >
-            <TouchableOpacity
-              testID="event-color-default"
-              accessibilityRole="button"
-              accessibilityLabel={t('event.color')}
-              onPress={() => setColor(undefined)}
-              style={[
-                styles.colorSwatch,
-                { backgroundColor: defaultColor },
-                color === undefined && { borderColor: theme.colors.text },
-              ]}
+          <Stack gap={8}>
+            <Typography variant="body2" color="secondary">{t('event.color')}</Typography>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.colorRow}
             >
-              {color === undefined && (
-                <Check size={16} color={contrastFor(defaultColor).text} />
-              )}
-            </TouchableOpacity>
-            {EVENT_COLORS.map((option) => (
               <TouchableOpacity
-                key={option}
-                testID={`event-color-${option.replace('#', '')}`}
+                testID="event-color-default"
                 accessibilityRole="button"
-                accessibilityLabel={option}
-                onPress={() => setColor(option)}
+                accessibilityLabel={t('event.color')}
+                onPress={() => setColor(undefined)}
                 style={[
                   styles.colorSwatch,
-                  { backgroundColor: option },
-                  color === option && { borderColor: theme.colors.text },
+                  { backgroundColor: defaultColor },
+                  color === undefined && { borderColor: theme.colors.text },
                 ]}
               >
-                {color === option && (
-                  <Check size={16} color={contrastFor(option).text} />
+                {color === undefined && (
+                  <Check size={16} color={contrastFor(defaultColor).text} />
                 )}
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Stack>
+              {EVENT_COLORS.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  testID={`event-color-${option.replace('#', '')}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={option}
+                  onPress={() => setColor(option)}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: option },
+                    color === option && { borderColor: theme.colors.text },
+                  ]}
+                >
+                  {color === option && (
+                    <Check size={16} color={contrastFor(option).text} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Stack>
+        </FormSection>
 
-        <Stack direction="horizontal" vAlign="center" hAlign="center">
-          <Typography variant="body2" color="secondary">{t('event.allDay')}</Typography>
-          <View style={styles.pushRight}>
-            <Toggle testID="event-form-all-day" value={allDay} onValueChange={(v) => { setAllDay(v); setEndError(null); }} />
-          </View>
-        </Stack>
-
-        <Stack direction={twoColDates ? 'horizontal' : 'vertical'} gap={twoColDates ? 12 : 16}>
-          {startBlock}
-          {endBlock}
-        </Stack>
-
-        {Platform.OS === 'android' && androidStep !== null && (
-          <DateTimePicker
-            key={`android-picker-${androidStep.target}-${androidStep.step}`}
-            value={androidPickerValue ?? new Date()}
-            mode={androidPickerMode}
-            is24Hour={use24h}
-            onChange={handleAndroidChange}
-          />
-        )}
-
-
-        <Stack
-          direction={twoColDates ? 'horizontal' : 'vertical'}
-          gap={twoColDates ? 12 : 16}
-          hAlign="stretch"
+        <FormSection
+          testID="event-form-section-when"
+          title={t('event.when', { defaultValue: 'When' })}
         >
-          <View style={twoColDates ? styles.grow : undefined}>
-            <RecurrencePicker value={rrule} onChange={setRrule} dtstart={dtstart} allDay={allDay} />
+          <Stack direction="horizontal" vAlign="center" hAlign="center">
+            <Typography variant="body2" color="secondary">{t('event.allDay')}</Typography>
+            <View style={styles.pushRight}>
+              <Toggle testID="event-form-all-day" value={allDay} onValueChange={(v) => { setAllDay(v); setEndError(null); }} />
+            </View>
+          </Stack>
+
+          <Stack direction={twoColDates ? 'horizontal' : 'vertical'} gap={twoColDates ? 12 : 16}>
+            {startBlock}
+            {endBlock}
+          </Stack>
+
+          {Platform.OS === 'android' && androidStep !== null && (
+            <DateTimePicker
+              key={`android-picker-${androidStep.target}-${androidStep.step}`}
+              value={androidPickerValue ?? new Date()}
+              mode={androidPickerMode}
+              is24Hour={use24h}
+              onChange={handleAndroidChange}
+            />
+          )}
+
+          {durationHint ? (
+            <Typography
+              testID="event-form-duration"
+              variant="caption"
+              color="secondary"
+              style={styles.durationHint}
+            >
+              {durationHint}
+            </Typography>
+          ) : null}
+
+          <Stack
+            direction={twoColDates ? 'horizontal' : 'vertical'}
+            gap={twoColDates ? 12 : 16}
+            hAlign="stretch"
+          >
+            <View style={twoColDates ? styles.grow : undefined}>
+              <RecurrencePicker value={rrule} onChange={setRrule} dtstart={dtstart} allDay={allDay} />
+            </View>
+            <View style={twoColDates ? styles.grow : undefined}>
+              <AlertPicker value={alarms} onChange={setAlarms} />
+            </View>
+          </Stack>
+        </FormSection>
+
+        <FormSection
+          testID="event-form-section-more"
+          toggleTestID="event-form-more-toggle"
+          title={t('event.more', { defaultValue: 'More' })}
+          collapsedSummary={moreSummary}
+          collapsible
+        >
+          <View onLayout={(e) => onFieldLayout('location', e)}>
+            <TextField
+              testID="event-form-location"
+              label={t('event.location')}
+              value={location}
+              onChangeText={setLocation}
+              placeholder={t('event.locationPlaceholder')}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              textContentType="none"
+              onFocus={() => scrollToField('location')}
+            />
           </View>
-          <View style={twoColDates ? styles.grow : undefined}>
-            <AlertPicker value={alarms} onChange={setAlarms} />
+
+          <View onLayout={(e) => onFieldLayout('description', e)}>
+            <TextField
+              label={t('event.description')}
+              value={description}
+              onChangeText={setDescription}
+              placeholder={t('event.descriptionPlaceholder')}
+              multiline
+              numberOfLines={3}
+              style={styles.multiline}
+              onFocus={() => scrollToField('description')}
+            />
           </View>
-        </Stack>
 
-        <View onLayout={(e) => onFieldLayout('location', e)}>
-          <TextField
-            testID="event-form-location"
-            label={t('event.location')}
-            value={location}
-            onChangeText={setLocation}
-            placeholder={t('event.locationPlaceholder')}
-            autoCapitalize="none"
-            autoCorrect={false}
-            spellCheck={false}
-            autoComplete="off"
-            textContentType="none"
-            onFocus={() => scrollToField('location')}
+          <AttendeesField
+            attendees={attendees}
+            onChange={setAttendees}
+            account={account}
+            onInputLayout={(e) => onFieldLayout('attendee', e)}
+            onInputFocus={() => scrollToField('attendee')}
           />
-        </View>
 
-        <View onLayout={(e) => onFieldLayout('description', e)}>
-          <TextField
-            label={t('event.description')}
-            value={description}
-            onChangeText={setDescription}
-            placeholder={t('event.descriptionPlaceholder')}
-            multiline
-            numberOfLines={3}
-            style={styles.multiline}
-            onFocus={() => scrollToField('description')}
+          <TalkToggle
+            value={withTalkRoom}
+            onChange={setWithTalkRoom}
+            roomType={talkRoomType}
+            onRoomTypeChange={setTalkRoomType}
           />
-        </View>
-
-        <AttendeesField
-          attendees={attendees}
-          onChange={setAttendees}
-          account={account}
-          onInputLayout={(e) => onFieldLayout('attendee', e)}
-          onInputFocus={() => scrollToField('attendee')}
-        />
-
-        <TalkToggle
-          value={withTalkRoom}
-          onChange={setWithTalkRoom}
-          roomType={talkRoomType}
-          onRoomTypeChange={setTalkRoomType}
-        />
+        </FormSection>
       </Stack>
     </ScrollView>
     </KeyboardAvoidingView>
@@ -466,6 +517,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, padding: 20 },
   scrollContent: { paddingBottom: 40 },
   multiline: { height: 80, textAlignVertical: 'top' },
+  durationHint: { marginLeft: 2, marginTop: -8 },
   chipRow: { gap: 8 },
   colorRow: { gap: 10, paddingVertical: 2 },
   colorSwatch: {

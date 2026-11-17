@@ -8,7 +8,14 @@ const HALF_LINES = Array.from({ length: 24 }, (_, i) => i);
 function GridLinesImpl() {
   const { colors } = useTheme();
   return (
-    <View testID="grid-lines" pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View
+      testID="grid-lines"
+      pointerEvents="none"
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={StyleSheet.absoluteFill}
+    >
       {HALF_LINES.map((hour) => (
         <View
           key={`half-${hour}`}

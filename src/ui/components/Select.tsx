@@ -107,7 +107,7 @@ function Select<T>({
                 {
                   backgroundColor: onGlass ? 'transparent' : colors.surface,
                   borderWidth: onGlass ? 0 : 1.5,
-                  borderColor: colors.border,
+                  borderColor: colors.borderStrong,
                 },
               ]}
             >
@@ -125,7 +125,7 @@ function Select<T>({
             disabled={disabled}
             style={[
               styles.trigger,
-              { backgroundColor: colors.surface, borderColor: open ? colors.primary : colors.border },
+              { backgroundColor: colors.surface, borderColor: open ? colors.primary : colors.borderStrong },
             ]}
             testID={testID}
             onPress={toggle}
@@ -149,7 +149,7 @@ function Select<T>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />
-        <View style={[styles.dropdown, dropdownPos, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.dropdown, dropdownPos, { backgroundColor: colors.surface, borderColor: colors.borderStrong, shadowColor: colors.shadow }]}>
           <ScrollView style={{ maxHeight: MAX_LIST_HEIGHT }} bounces={false}>
             {options.map((option, i) => (
               <AnimatedPressable
@@ -218,7 +218,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 8,
-    shadowColor: '#000',
     shadowOpacity: 0.18,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },

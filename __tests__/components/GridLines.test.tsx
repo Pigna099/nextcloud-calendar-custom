@@ -37,4 +37,11 @@ describe('GridLines', () => {
     const { getByTestId } = render(<GridLines />);
     expect(getByTestId('grid-lines').props.pointerEvents).toBe('none');
   });
+
+  it('stays out of the accessibility tree', () => {
+    const { getByTestId } = render(<GridLines />);
+    const lines = getByTestId('grid-lines');
+    expect(lines.props.accessibilityElementsHidden).toBe(true);
+    expect(lines.props.importantForAccessibility).toBe('no-hide-descendants');
+  });
 });

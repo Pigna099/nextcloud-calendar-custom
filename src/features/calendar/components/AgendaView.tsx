@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useMemo, useLayoutEffect, forwardRef, useImperativeHandle } from 'react';
+import { memo, useRef, useCallback, useEffect, useMemo, useLayoutEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, type ViewToken,
   type NativeScrollEvent, type NativeSyntheticEvent,
@@ -13,6 +13,9 @@ import { useTimeFormat } from '@/hooks/useTimeFormat';
 import {
   AGENDA_FUTURE_DAYS, AGENDA_PAST_DAYS, agendaRowKey, buildAgendaSections,
 } from '../utils/agendaSections';
+import { useCalendarDensity, type CalendarDensity } from '../hooks/useCalendarDensity';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { useToday } from '../hooks/useToday';
 
 dayjs.extend(localizedFormat);
 
@@ -24,41 +27,99 @@ interface Props {
   onVisibleDateChange?: (date: Date) => void;
 }
 
-const HEADER_HEIGHT = 57;
-const EVENT_ROW_HEIGHT = 72;
-
 const TODAY_JUMP_GUARD_MS = 500;
 
 interface DayHeaderProps {
   sectionDate: Date;
   hasEvents: boolean;
+  isToday: boolean;
   theme: Theme;
+  density: CalendarDensity;
+  reduceMotion: boolean;
   onPress: (d: Date) => void;
 }
 
-const DayHeader = memo(({ sectionDate, hasEvents, theme, onPress }: DayHeaderProps) => {
+const DayHeader = memo(({
+  sectionDate, hasEvents, isToday, theme, density, reduceMotion, onPress,
+}: DayHeaderProps) => {
   const { t } = useTranslation();
   const d = dayjs(sectionDate);
-  const isToday = d.isSame(dayjs(), 'day');
+  const dayLabel = d.format('dddd, D MMMM');
+  const accessibilityLabel = [
+    dayLabel,
+    isToday ? t('calendar.today') : null,
+    !hasEvents ? t('calendar.noEvents') : null,
+  ].filter(Boolean).join(', ');
+
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={t('event.newEvent')}
       onPress={() => onPress(sectionDate)}
-      style={[styles.dayHeader, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.borderSubtle }]}
-      activeOpacity={0.7}
+      style={[
+        styles.dayHeader,
+        {
+          height: density.agendaHeaderHeight,
+          backgroundColor: theme.colors.background,
+          borderBottomColor: theme.colors.borderSubtle,
+        },
+      ]}
+      activeOpacity={reduceMotion ? 1 : 0.7}
     >
-      <View style={[styles.dayBadge, isToday && { backgroundColor: theme.colors.primary }]}>
-        <Text style={[styles.dayNum, { color: isToday ? theme.colors.primaryText : theme.colors.text }]}>
+      <View
+        style={[
+          styles.dayBadge,
+          {
+            width: density.agendaDayBadgeSize,
+            height: density.agendaDayBadgeSize,
+            borderRadius: density.agendaDayBadgeSize / 2,
+          },
+          isToday && { backgroundColor: theme.colors.primary },
+        ]}
+      >
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.dayNum,
+            { fontSize: density.agendaDayNumberSize, color: isToday ? theme.colors.primaryText : theme.colors.text },
+          ]}
+        >
           {d.format('D')}
         </Text>
       </View>
       <View>
-        <Text style={[styles.dayName, { color: isToday ? theme.colors.primary : theme.colors.textSecondary }]}>
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.dayName,
+            { fontSize: density.agendaDayNameSize, color: isToday ? theme.colors.primary : theme.colors.textSecondary },
+          ]}
+        >
           {d.format('ddd').toUpperCase()}
         </Text>
-        {isToday && <Text style={[styles.todayLabel, { color: theme.colors.primary }]}>{t('calendar.today')}</Text>}
+        {isToday && (
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.todayLabel,
+              { fontSize: density.agendaTodayLabelSize, color: theme.colors.primary },
+            ]}
+          >
+            {t('calendar.today')}
+          </Text>
+        )}
       </View>
       {!hasEvents && (
-        <Text style={[styles.noEvents, { color: theme.colors.textTertiary }]}>{t('calendar.noEvents')}</Text>
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.noEvents,
+            { fontSize: density.agendaNoEventsSize, color: theme.colors.textTertiary },
+          ]}
+        >
+          {t('calendar.noEvents')}
+        </Text>
       )}
     </TouchableOpacity>
   );
@@ -67,10 +128,13 @@ const DayHeader = memo(({ sectionDate, hasEvents, theme, onPress }: DayHeaderPro
 interface EventRowProps {
   event: CalendarEvent;
   theme: Theme;
+  height: number;
+  density: CalendarDensity;
+  reduceMotion: boolean;
   onPress: (e: CalendarEvent) => void;
 }
 
-const EventRow = memo(({ event, theme, onPress }: EventRowProps) => {
+const EventRow = memo(({ event, theme, height, density, reduceMotion, onPress }: EventRowProps) => {
   const { t } = useTranslation();
   const { formatTime } = useTimeFormat();
   const duration = event.allDay
@@ -84,28 +148,68 @@ const EventRow = memo(({ event, theme, onPress }: EventRowProps) => {
       })();
 
   const allDayLabel = t('calendar.allDay');
+  const title = event.summary || t('calendar.noTitle');
+  const timeLabel = event.allDay
+    ? allDayLabel
+    : `${formatTime(event.dtstart)} – ${formatTime(event.dtend)}`;
+  const accessibilityLabel = [
+    title,
+    timeLabel,
+    duration,
+    event.location || null,
+  ].filter(Boolean).join(', ');
 
   return (
     <TouchableOpacity
-      style={[styles.eventRow, { backgroundColor: theme.colors.surface }]}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.eventRow, { height: height - 6, backgroundColor: theme.colors.surface }]}
       onPress={() => onPress(event)}
-      activeOpacity={0.75}
+      activeOpacity={reduceMotion ? 1 : 0.75}
     >
       <View style={[styles.colorBar, { backgroundColor: event.color }]} />
       <View style={styles.eventContent}>
-        <Text style={[styles.eventTitle, { color: theme.colors.text }]} numberOfLines={1}>
-          {event.summary || t('calendar.noTitle')}
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.eventTitle,
+            { fontSize: density.agendaEventTitleSize, color: theme.colors.text },
+          ]}
+          numberOfLines={1}
+        >
+          {title}
         </Text>
         <View style={styles.eventMeta}>
-          <Text style={[styles.eventTime, { color: theme.colors.textSecondary }]}>
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.eventTime,
+              { fontSize: density.agendaEventMetaSize, color: theme.colors.textSecondary },
+            ]}
+          >
             {event.allDay ? allDayLabel : formatTime(event.dtstart)}
             {!event.allDay && ` – ${formatTime(event.dtend)}`}
           </Text>
           {duration && (
-            <Text style={[styles.eventDuration, { color: theme.colors.textTertiary }]}>{duration}</Text>
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.eventDuration,
+                { fontSize: density.agendaEventDetailSize, color: theme.colors.textTertiary },
+              ]}
+            >
+              {duration}
+            </Text>
           )}
           {event.location ? (
-            <Text style={[styles.eventLocation, { color: theme.colors.textTertiary }]} numberOfLines={1}>
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.eventLocation,
+                { fontSize: density.agendaEventDetailSize, color: theme.colors.textTertiary },
+              ]}
+              numberOfLines={1}
+            >
               · {event.location}
             </Text>
           ) : null}
@@ -124,18 +228,21 @@ type Row =
   | { type: 'item'; key: string; date: Date; event: CalendarEvent };
 
 const AgendaViewImpl = forwardRef<AgendaViewHandle, Props>(function AgendaView(
-  { events, onPressEvent, onPressCell, onVisibleDateChange }, ref
+  { events, date, onPressEvent, onPressCell, onVisibleDateChange }, ref
 ) {
   const theme = useTheme();
+  const density = useCalendarDensity();
+  const reduceMotion = useReduceMotion();
+  const today = useToday();
   const listRef = useRef<FlatList<Row>>(null);
-  const todayKey = dayjs().format('YYYY-MM-DD');
+  const todayKey = dayjs(today).format('YYYY-MM-DD');
 
   const { rows, stickyIndices, offsets, todayIndex } = useMemo(() => {
-    const today = dayjs();
+    const todayDayjs = dayjs(today);
     const sections = buildAgendaSections(
       events,
-      today.subtract(AGENDA_PAST_DAYS, 'day').toDate(),
-      today.add(AGENDA_FUTURE_DAYS, 'day').toDate(),
+      todayDayjs.subtract(AGENDA_PAST_DAYS, 'day').toDate(),
+      todayDayjs.add(AGENDA_FUTURE_DAYS, 'day').toDate(),
     );
     const out: Row[] = [];
     const sticky: number[] = [];
@@ -146,25 +253,34 @@ const AgendaViewImpl = forwardRef<AgendaViewHandle, Props>(function AgendaView(
       if (s.key === todayKey) todayIdx = out.length;
       sticky.push(out.length);
       offs.push(y);
-      y += HEADER_HEIGHT;
+      y += density.agendaHeaderHeight;
       out.push({ type: 'header', key: s.key, date: s.date, hasEvents: s.data.length > 0 });
       for (const e of s.data) {
         offs.push(y);
-        y += EVENT_ROW_HEIGHT;
+        y += density.agendaEventHeight;
         out.push({ type: 'item', key: s.key, date: s.date, event: e });
       }
     }
     return { rows: out, stickyIndices: sticky, offsets: offs, todayIndex: todayIdx };
-  }, [events, todayKey]);
+  }, [events, today, todayKey, density]);
 
   const getItemLayout = useCallback((data: ArrayLike<Row> | null | undefined, index: number) => ({
-    length: data?.[index]?.type === 'header' ? HEADER_HEIGHT : EVENT_ROW_HEIGHT,
+    length: data?.[index]?.type === 'header' ? density.agendaHeaderHeight : density.agendaEventHeight,
     offset: offsets[index] ?? 0,
     index,
-  }), [offsets]);
+  }), [offsets, density]);
 
-  const scrollYRef = useRef(offsets[todayIndex] ?? 0);
-  const anchorRef = useRef({ key: todayKey, delta: 0 });
+  const dateKey = dayjs(date).format('YYYY-MM-DD');
+  const initialIndex = useMemo(() => {
+    const index = rows.findIndex((row) => row.type === 'header' && row.key === dateKey);
+    return index >= 0 ? index : todayIndex;
+  }, [rows, dateKey, todayIndex]);
+  const initialHeaderKey = rows[initialIndex]?.type === 'header' && rows[initialIndex].key === dateKey
+    ? dateKey
+    : todayKey;
+
+  const scrollYRef = useRef(offsets[initialIndex] ?? offsets[todayIndex] ?? 0);
+  const anchorRef = useRef({ key: initialHeaderKey, delta: 0 });
   const layoutRef = useRef({ rows, offsets });
   const userScrollingRef = useRef(false);
   const onUserScrollStart = useCallback(() => { userScrollingRef.current = true; }, []);
@@ -190,7 +306,20 @@ const AgendaViewImpl = forwardRef<AgendaViewHandle, Props>(function AgendaView(
     listRef.current?.scrollToOffset({ offset: y, animated: false });
   }, [rows, offsets]);
 
-  const initialIndexRef = useRef(todayIndex);
+  const lastDateJumpRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = dayjs(date).format('YYYY-MM-DD');
+    const index = rows.findIndex((row) => row.type === 'header' && row.key === key);
+    if (index < 0 || lastDateJumpRef.current === key) return;
+    lastDateJumpRef.current = key;
+    const y = offsets[index];
+    userScrollingRef.current = false;
+    anchorRef.current = { key, delta: 0 };
+    scrollYRef.current = y;
+    listRef.current?.scrollToOffset({ offset: y, animated: !reduceMotion });
+  }, [date, rows, offsets, reduceMotion]);
+
+  const initialIndexRef = useRef(initialIndex);
   const todayRef = useRef({ key: todayKey, y: offsets[todayIndex] ?? 0 });
   todayRef.current = { key: todayKey, y: offsets[todayIndex] ?? 0 };
   const lastJumpAtRef = useRef(0);
@@ -217,9 +346,28 @@ const AgendaViewImpl = forwardRef<AgendaViewHandle, Props>(function AgendaView(
 
   const renderRow = useCallback(({ item }: { item: Row }) => (
     item.type === 'header'
-      ? <DayHeader sectionDate={item.date} hasEvents={item.hasEvents} theme={theme} onPress={onPressCell} />
-      : <EventRow event={item.event} theme={theme} onPress={onPressEvent} />
-  ), [theme, onPressCell, onPressEvent]);
+      ? (
+        <DayHeader
+          sectionDate={item.date}
+          hasEvents={item.hasEvents}
+          isToday={item.key === todayKey}
+          theme={theme}
+          density={density}
+          reduceMotion={reduceMotion}
+          onPress={onPressCell}
+        />
+      )
+      : (
+        <EventRow
+          event={item.event}
+          theme={theme}
+          height={density.agendaEventHeight}
+          density={density}
+          reduceMotion={reduceMotion}
+          onPress={onPressEvent}
+        />
+      )
+  ), [theme, density, reduceMotion, todayKey, onPressCell, onPressEvent]);
 
   const keyExtractor = useCallback((item: Row) => (
     item.type === 'header' ? `h-${item.key}` : agendaRowKey(item.key, item.event)
@@ -269,15 +417,11 @@ const styles = StyleSheet.create({
   dayHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: HEADER_HEIGHT,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     gap: 12,
   },
   dayBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -291,7 +435,6 @@ const styles = StyleSheet.create({
     marginVertical: 3,
     borderRadius: 10,
     overflow: 'hidden',
-    height: EVENT_ROW_HEIGHT - 6,
   },
   colorBar: { width: 4 },
   eventContent: { flex: 1, padding: 10, justifyContent: 'center' },

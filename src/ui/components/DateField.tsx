@@ -32,7 +32,7 @@ function DateField({ label, value, time, onPress, error, disabled, testID }: Dat
           {
             backgroundColor: colors.surface,
             borderRadius: radius.md,
-            borderColor: error ? colors.danger : colors.border,
+            borderColor: error ? colors.danger : colors.borderStrong,
             opacity: disabled ? 0.5 : 1,
           },
         ]}

@@ -24,11 +24,30 @@ export interface ThemeColors {
   textTertiary: string;
   border: string;
   borderSubtle: string;
+  /** Control boundary with at least 3:1 contrast against nearby surfaces. */
+  borderStrong: string;
   primary: string;
+  /** @deprecated Prefer onPrimary. Kept for existing navigation/calendar code. */
   primaryText: string;
+  onPrimary: string;
+  primarySoft: string;
+  primarySoftBorder: string;
+  primarySoftText: string;
   talk: string;
+  onTalk: string;
+  talkSoft: string;
+  talkSoftBorder: string;
+  talkSoftText: string;
   danger: string;
+  onDanger: string;
+  dangerSoft: string;
+  dangerSoftBorder: string;
+  dangerSoftText: string;
   warning: string;
+  onWarning: string;
+  warningSoft: string;
+  warningSoftBorder: string;
+  warningSoftText: string;
   tabBar: string;
   tabBarBorder: string;
   tabBarInactive: string;
@@ -38,6 +57,10 @@ export interface ThemeColors {
   card: string;
   notification: string;
   item: string;
+  /** Colour for native shadows (kept opaque so platforms can animate it). */
+  shadow: string;
+  /** Backdrop behind modals and sheets. */
+  scrim: string;
 }
 
 export interface ThemeSpacing {
@@ -92,53 +115,91 @@ const typography: ThemeTypography = { caption: 13, body: 15, title: 17, heading:
 const fonts: ThemeFonts = DefaultTheme.fonts;
 
 const lightColors: ThemeColors = {
-  background: '#ffffff',
-  surface: '#f5f5f5',
+  background: '#f5f7f9',
+  surface: '#ffffff',
   surfaceRaised: '#ffffff',
-  text: '#1a1a1a',
-  textSecondary: '#555555',
-  textTertiary: '#888888',
-  border: '#eeeeee',
-  borderSubtle: '#f5f5f5',
-  primary: '#109be6',
+  text: '#171b20',
+  textSecondary: '#4d5761',
+  textTertiary: '#626d79',
+  border: '#e2e7ec',
+  borderSubtle: '#edf0f3',
+  borderStrong: '#7f8791',
+  primary: '#08679c',
   primaryText: '#ffffff',
-  talk: '#0082c9',
-  danger: '#d32f2f',
-  warning: '#f57c00',
+  onPrimary: '#ffffff',
+  primarySoft: '#e7eff5',
+  primarySoftBorder: '#c5d9e6',
+  primarySoftText: '#0a5d8c',
+  talk: '#0077b8',
+  onTalk: '#ffffff',
+  talkSoft: '#e6f1f8',
+  talkSoftBorder: '#c2d9e8',
+  talkSoftText: '#006392',
+  danger: '#b8322a',
+  onDanger: '#ffffff',
+  dangerSoft: '#fbeceb',
+  dangerSoftBorder: '#efc9c5',
+  dangerSoftText: '#a1271f',
+  warning: '#9a5700',
+  onWarning: '#ffffff',
+  warningSoft: '#fbf2e2',
+  warningSoftBorder: '#ead6b4',
+  warningSoftText: '#855000',
   tabBar: '#ffffff',
-  tabBarBorder: '#e0e0e0',
-  tabBarInactive: '#8e8e93',
-  headerBackground: '#ffffff',
-  chip: '#f0f0f0',
-  chipActive: '#109be6',
+  tabBarBorder: '#e2e7ec',
+  tabBarInactive: '#626d79',
+  headerBackground: '#f5f7f9',
+  chip: '#eef2f5',
+  chipActive: '#08679c',
   card: '#ffffff',
-  notification: '#d32f2f',
-  item: '#f7f7f7',
+  notification: '#b8322a',
+  item: '#ffffff',
+  shadow: '#0b1220',
+  scrim: 'rgba(8, 12, 18, 0.38)',
 };
 
 const darkColors: ThemeColors = {
-  background: '#121212',
-  surface: '#1e1e1e',
-  surfaceRaised: '#2a2a2a',
-  text: '#f1f1f1',
-  textSecondary: '#aaaaaa',
-  textTertiary: '#666666',
-  border: '#333333',
-  borderSubtle: '#242424',
-  primary: '#29aef7',
-  primaryText: '#ffffff',
-  talk: '#29b6f6',
-  danger: '#ef5350',
-  warning: '#ffa726',
-  tabBar: '#1c1c1e',
-  tabBarBorder: '#2c2c2e',
-  tabBarInactive: '#636366',
-  headerBackground: '#1c1c1e',
-  chip: '#2c2c2e',
-  chipActive: '#29aef7',
-  card: '#1c1c1e',
-  notification: '#ef5350',
-  item: '#1e1e1e',
+  background: '#0e1114',
+  surface: '#171b20',
+  surfaceRaised: '#20262d',
+  text: '#edf1f4',
+  textSecondary: '#b3bec8',
+  textTertiary: '#8e9aa5',
+  border: '#2b333c',
+  borderSubtle: '#20262d',
+  borderStrong: '#68727e',
+  primary: '#6cc7f5',
+  primaryText: '#0b1220',
+  onPrimary: '#0b1220',
+  primarySoft: '#152a36',
+  primarySoftBorder: '#244554',
+  primarySoftText: '#9dd4f3',
+  talk: '#5bb9e8',
+  onTalk: '#08202e',
+  talkSoft: '#142a35',
+  talkSoftBorder: '#24475a',
+  talkSoftText: '#8fd0f4',
+  danger: '#f08a84',
+  onDanger: '#2a0b09',
+  dangerSoft: '#2d1a1a',
+  dangerSoftBorder: '#4a2a28',
+  dangerSoftText: '#f3b4ae',
+  warning: '#f0c37a',
+  onWarning: '#2a1c05',
+  warningSoft: '#2b2416',
+  warningSoftBorder: '#443a22',
+  warningSoftText: '#f0c98a',
+  tabBar: '#12161a',
+  tabBarBorder: '#2b333c',
+  tabBarInactive: '#8e9aa5',
+  headerBackground: '#0e1114',
+  chip: '#20262d',
+  chipActive: '#6cc7f5',
+  card: '#1a1f25',
+  notification: '#f08a84',
+  item: '#1b2026',
+  shadow: '#000000',
+  scrim: 'rgba(0, 0, 0, 0.62)',
 };
 
 export const lightTheme: Theme = { dark: false, colors: lightColors, fonts, spacing, radius, typography };

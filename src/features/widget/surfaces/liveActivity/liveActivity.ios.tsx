@@ -42,37 +42,36 @@ const CalendarLiveActivity = (props: ActivityProps) => {
   const TYPE = { time: 12, caption: 13, body: 15, title: 17, heading: 22 };
 
   function parseHex(hex: string): [number, number, number] {
-    let h = (hex ? String(hex) : '#3b82f6').replace('#', '');
-    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-    const n = parseInt(h.slice(0, 6), 16);
-    if (isNaN(n)) return [59, 130, 246];
+    const h = (hex ? String(hex) : '#3b82f6').trim().replace('#', '');
+    const expanded = h.length === 3 || h.length === 4 ? h.split('').map((c) => c + c).join('') : h;
+    const n = parseInt(expanded.slice(0, 6), 16);
+    if (isNaN(n) || !/^[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(expanded)) return [59, 130, 246];
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
 
   function toHex(n: number): string {
-    const s = Math.max(0, Math.min(255, n)).toString(16);
+    const s = Math.max(0, Math.min(255, Math.round(n))).toString(16);
     return s.length === 1 ? `0${s}` : s;
   }
 
-  function mix(hex: string, target: number, amount: number): string {
+  function mixColor(hex: string, base: string, amount: number): string {
     const rgb = parseHex(hex);
-    const r = Math.round(rgb[0] + (target - rgb[0]) * amount);
-    const g = Math.round(rgb[1] + (target - rgb[1]) * amount);
-    const b = Math.round(rgb[2] + (target - rgb[2]) * amount);
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    const bg = parseHex(base);
+    const t = Math.min(1, Math.max(0, amount));
+    return `#${toHex(bg[0] + (rgb[0] - bg[0]) * t)}${toHex(bg[1] + (rgb[1] - bg[1]) * t)}${toHex(bg[2] + (rgb[2] - bg[2]) * t)}`;
   }
-  function lighten(hex: string, amount: number): string { return mix(hex, 255, amount); }
-  function darken(hex: string, amount: number): string { return mix(hex, 0, amount); }
 
-  function onEventColor(hex: string): string {
+  function relativeLuminance(hex: string): number {
     const rgb = parseHex(hex);
-    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-    return luminance > 0.6 ? '#111111' : '#ffffff';
+    const linear = rgb.map((value) => {
+      const c = value / 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
   }
 
   function displayColor(hex: string): string {
-    const rgb = parseHex(hex);
-    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+    const luminance = relativeLuminance(hex);
     if (luminance < 0.25) return '#ffffff';
     return hex || '#3b82f6';
   }
@@ -99,10 +98,15 @@ const CalendarLiveActivity = (props: ActivityProps) => {
   }
 
   function Banner() {
-    const fg = onEventColor(props.color);
+    // Keep the event hue but pull it toward the same calm, deep surface used by
+    // the widgets. Both gradient stops stay dark enough for WCAG AA white ink.
+    const tintBase = '#0e1114';
+    const tintStart = mixColor(props.color, tintBase, 0.34);
+    const tintEnd = mixColor(props.color, tintBase, 0.2);
+    const fg = '#ffffff';
     const bg = {
       type: 'linearGradient' as const,
-      colors: [lighten(props.color, 0.12), darken(props.color, 0.28)],
+      colors: [tintStart, tintEnd],
       startPoint: { x: 0, y: 0 },
       endPoint: { x: 1, y: 1 },
     };

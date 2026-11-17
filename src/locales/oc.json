@@ -73,7 +73,17 @@
     "noTitle": "(Sens títol)",
     "drawerNoCalendars": "Pas de calendari",
     "calendarNotifications": "Notificacions per {{name}}",
-    "calendarVisibility": "Afichar {{name}}"
+    "calendarVisibility": "Afichar {{name}}",
+    "search": {
+      "title": "Recèrca",
+      "placeholder": "Recercar d’eveniments",
+      "jumpToDate": "Anar a la data",
+      "hint": "Recercar los eveniments d’aqueste compte per títol o luòc.",
+      "searching": "Recèrca…",
+      "error": "Impossible de recercar los eveniments.",
+      "noResults": "Cap d’eveniment correspondent"
+    },
+    "openMenu": "Dobrir lo menú"
   },
   "event": {
     "color": "Color",
@@ -164,7 +174,11 @@
     "errorCreateFailed": "La creacion de l'eveniment a pas capitat",
     "errorUpdateFailed": "La mesa a jorn de l'eveniment a pas capitat",
     "errorDeleteFailed": "La supression de l'eveniment a pas capitat",
-    "alerts": "Alèrtas"
+    "alerts": "Alèrtas",
+    "details": "Details",
+    "when": "Quand",
+    "more": "Mai",
+    "duration": "Durada"
   },
   "settings": {
     "title": "Paramètres",

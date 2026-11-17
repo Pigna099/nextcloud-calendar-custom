@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
+import { useTheme } from 'expo-router';
 import AnimatedPressable from './AnimatedPressable';
 import Stack from './Stack';
 
@@ -10,9 +11,10 @@ interface DialogProps {
 }
 
 function Dialog({ visible, onClose, children }: DialogProps) {
+  const { colors } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <AnimatedPressable animated={false} onPress={onClose} style={styles.backdrop}>
+      <AnimatedPressable animated={false} onPress={onClose} style={[styles.backdrop, { backgroundColor: colors.scrim }]}>
         <View onStartShouldSetResponder={() => true} style={styles.stop}>
           <Stack card gap={12} padding={24} hAlign="center">
             {children}
@@ -28,7 +30,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   stop: { width: '86%' },

@@ -41,9 +41,9 @@ function IconButton({
         borderRadius,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: onGlass || variant === 'plain' ? 'transparent' : colors.surface,
+        backgroundColor: onGlass || variant === 'plain' ? 'transparent' : variant === 'filled' ? colors.primarySoft : colors.surface,
         borderWidth: onGlass || variant === 'plain' ? 0 : 1.5,
-        borderColor: colors.border,
+        borderColor: variant === 'filled' ? colors.primarySoftText : colors.borderStrong,
         opacity: disabled ? 0.4 : 1,
       }}
     >

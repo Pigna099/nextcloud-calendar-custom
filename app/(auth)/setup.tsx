@@ -179,7 +179,7 @@ export default function SetupScreen() {
             <Button
               variant="primary"
               title={t('setup.scanQr')}
-              icon={<QrCode size={22} color="#fff" />}
+              icon={<QrCode size={22} color={theme.colors.onPrimary} />}
               disabled={loading}
               onPress={() => setShowScanner(true)}
             />

@@ -127,18 +127,21 @@ export function AlarmOffsetPicker({ values, onChange, allDay = false, leading, t
               accessibilityState={{ selected: active }}
               style={[
                 styles.pill,
-                { backgroundColor: active ? theme.colors.primary : theme.colors.chip },
+                {
+                  backgroundColor: active ? theme.colors.primarySoft : theme.colors.chip,
+                  borderColor: active ? theme.colors.primarySoftText : theme.colors.borderStrong,
+                },
               ]}
               onPress={() => toggle(minutes)}
             >
-              <Text style={[styles.pillText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+              <Text style={[styles.pillText, { color: active ? theme.colors.primarySoftText : theme.colors.textSecondary }]}>
                 {labelOf(minutes)}
               </Text>
             </TouchableOpacity>
           );
         })}
         <TouchableOpacity
-          style={[styles.pill, { backgroundColor: theme.colors.chip }]}
+          style={[styles.pill, { backgroundColor: theme.colors.chip, borderColor: theme.colors.borderStrong }]}
           onPress={() => setCustomOpen(true)}
         >
           <Text style={[styles.pillText, { color: theme.colors.textSecondary }]}>
@@ -158,7 +161,7 @@ export function AlarmOffsetPicker({ values, onChange, allDay = false, leading, t
 
 const styles = StyleSheet.create({
   pillRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 },
+  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
   pillText: { fontSize: 14 },
   unitRow: { flexDirection: 'row', gap: 8 },
 });

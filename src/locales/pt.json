@@ -73,7 +73,17 @@
     "noTitle": "(Sem título)",
     "drawerNoCalendars": "Nenhum calendário",
     "calendarNotifications": "Notificações de {{name}}",
-    "calendarVisibility": "Mostrar {{name}}"
+    "calendarVisibility": "Mostrar {{name}}",
+    "search": {
+      "title": "Pesquisar",
+      "placeholder": "Pesquisar eventos",
+      "jumpToDate": "Ir para data",
+      "hint": "Pesquise eventos desta conta por título ou local.",
+      "searching": "A pesquisar…",
+      "error": "Não foi possível pesquisar eventos.",
+      "noResults": "Nenhum evento correspondente"
+    },
+    "openMenu": "Abrir menu"
   },
   "event": {
     "color": "Cor",
@@ -169,7 +179,11 @@
     "errorCreateFailed": "Falha ao criar o evento",
     "errorUpdateFailed": "Falha ao atualizar o evento",
     "errorDeleteFailed": "Falha ao eliminar o evento",
-    "alerts": "Alertas"
+    "alerts": "Alertas",
+    "details": "Detalhes",
+    "when": "Quando",
+    "more": "Mais",
+    "duration": "Duração"
   },
   "settings": {
     "title": "Definições",

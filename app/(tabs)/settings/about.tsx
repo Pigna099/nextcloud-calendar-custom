@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Bug } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from 'expo-router';
 
 import { SettingsPage } from '@/features/settings/components/SettingsPage';
 import { Button, Icon, Stack, Typography } from '@/ui/components';
@@ -14,6 +15,7 @@ const cardOuter = { marginHorizontal: 16, marginBottom: 12 };
 
 export default function AboutScreen() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const appVersion = Constants.expoConfig?.version ?? '—';
 
   return (
@@ -36,7 +38,7 @@ export default function AboutScreen() {
         <Button
           variant="primary"
           title={t('settings.about.github')}
-          icon={<Icon size={18}><Ionicons name="logo-github" color="#fff" /></Icon>}
+          icon={<Icon size={18}><Ionicons name="logo-github" color={colors.onPrimary} /></Icon>}
           onPress={() => Linking.openURL(GITHUB_URL)}
         />
         <Button

@@ -1,12 +1,14 @@
 import i18n from '@/utils/i18n';
+import { parseHexColor } from '@/utils/color';
 
 import LiveUpdates from '../../../../../modules/live-updates/src/LiveUpdatesModule';
 import type { LiveEventState, WidgetSurface } from '../../core/types';
 import { writeLiveEvent } from '../../storage/widgetStore';
 
 function argb(hex: string): number | undefined {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  return m ? 0xff000000 + parseInt(m[1], 16) : undefined;
+  const color = parseHexColor(hex);
+  if (!color) return undefined;
+  return 0xff000000 + ((color.r << 16) | (color.g << 8) | color.b);
 }
 
 function template(key: string): string {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { fireEvent, render as rtlRender } from '@testing-library/react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { act, fireEvent, render as rtlRender } from '@testing-library/react-native';
 import { ThemeWrapper } from '../helpers/theme';
 import dayjs from 'dayjs';
 
@@ -13,6 +13,23 @@ import type { CalendarEvent } from '../../src/types';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
+
+jest.mock('react-native-safe-area-context', () =>
+  require('react-native-safe-area-context/jest/mock').default
+);
+
+beforeEach(() => {
+  jest.spyOn(Dimensions, 'get').mockReturnValue({
+    width: 390,
+    height: 844,
+    scale: 3,
+    fontScale: 1,
+  });
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 let mockCapturedPagerProps: any[] = [];
 
@@ -39,7 +56,11 @@ const event: CalendarEvent = {
   allDay: false, color: '#0082c9', attendees: [], isRecurring: false,
 };
 
-function view(date: Date) {
+function monthListEventId(item: CalendarEvent) {
+  return `month-list-event-${item.calendarId}-${item.uid}-${item.dtstart.getTime()}`;
+}
+
+function view(date: Date, over: Partial<React.ComponentProps<typeof MonthDayView>> = {}) {
   return (
     <MonthDayView
       date={date}
@@ -50,6 +71,7 @@ function view(date: Date) {
       onMonthChange={jest.fn()}
       onPressEvent={jest.fn()}
       onPressCell={jest.fn()}
+      {...over}
     />
   );
 }
@@ -215,6 +237,59 @@ describe('MonthDayView', () => {
     expect(dayjs(onSelectDate.mock.calls[0][0]).format('YYYY-MM-DD')).toBe('2026-06-15');
   });
 
+  it('opens the day sheet with all events when a populated day is pressed', () => {
+    const onSelectDate = jest.fn();
+    const second: CalendarEvent = {
+      ...event,
+      uid: 'e2',
+      summary: 'Dinner',
+      dtstart: new Date(2026, 5, 15, 19, 0),
+      dtend: new Date(2026, 5, 15, 20, 0),
+    };
+    const { getByTestId } = render(view(june10, {
+      events: [event, second],
+      onSelectDate,
+    }));
+
+    fireEvent.press(getByTestId('month-day-2026-06-15'));
+
+    expect(onSelectDate).toHaveBeenCalledWith(new Date(2026, 5, 15));
+    expect(getByTestId('month-day-sheet')).toBeTruthy();
+    expect(getByTestId(monthListEventId(event))).toBeTruthy();
+    expect(getByTestId(monthListEventId(second))).toBeTruthy();
+  });
+
+  it('creates an event when an empty day is pressed', () => {
+    const onPressCell = jest.fn();
+    const onSelectDate = jest.fn();
+    const { getByTestId } = render(view(june10, { onPressCell, onSelectDate }));
+
+    fireEvent.press(getByTestId('month-day-2026-06-10'));
+
+    expect(onPressCell).toHaveBeenCalledWith(new Date(2026, 5, 10));
+    expect(onSelectDate).not.toHaveBeenCalled();
+  });
+
+  it('does not create from an apparently empty day while data is loading', () => {
+    const onPressCell = jest.fn();
+    const { getByTestId } = render(view(june10, { onPressCell, loading: true }));
+
+    fireEvent.press(getByTestId('month-day-2026-06-10'));
+
+    expect(onPressCell).not.toHaveBeenCalled();
+  });
+
+  it('offers creation from the day sheet for the selected date', () => {
+    const onPressCell = jest.fn();
+    const { getByTestId, queryByTestId } = render(view(june10, { onPressCell }));
+
+    fireEvent.press(getByTestId('month-day-2026-06-15'));
+    fireEvent.press(getByTestId('month-day-sheet-new'));
+
+    expect(onPressCell).toHaveBeenCalledWith(new Date(2026, 5, 15));
+    expect(queryByTestId('month-day-sheet')).toBeNull();
+  });
+
   it('reports the first day of the paged-to month through onMonthChange', () => {
     mockCapturedPagerProps = [];
     const onMonthChange = jest.fn();
@@ -239,11 +314,11 @@ describe('MonthDayView', () => {
     pager.onPageChange(0);
     expect(onMonthChange).not.toHaveBeenCalled();
 
-    pager.onPageChange(1);
+    act(() => pager.onPageChange(1));
     expect(onMonthChange).toHaveBeenCalledTimes(1);
     expect(dayjs(onMonthChange.mock.calls[0][0]).format('YYYY-MM-DD')).toBe('2026-07-01');
 
-    pager.onPageChange(-2);
+    act(() => pager.onPageChange(-2));
     expect(dayjs(onMonthChange.mock.calls[1][0]).format('YYYY-MM-DD')).toBe('2026-04-01');
   });
 });
