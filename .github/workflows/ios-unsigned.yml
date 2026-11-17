@@ -75,34 +75,15 @@ jobs:
           swift --version
 
       - name: Build unsigned app
-        id: xcode
+        working-directory: ios
         run: |
-          WORKSPACE=$(find ios -maxdepth 1 -name '*.xcworkspace' | head -n 1)
-          if [ -z "$WORKSPACE" ]; then
-            echo "::error::No Xcode workspace generated"
-            exit 1
-          fi
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json \
-            | jq -r '.workspace.schemes[]' \
-            | grep -viE 'widget|extension|target' \
-            | head -n 1)
-          if [ -z "$SCHEME" ]; then
-            SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json \
-              | jq -r '.workspace.schemes[0]')
-          fi
-          if [ -z "$SCHEME" ] || [ "$SCHEME" = "null" ]; then
-            echo "::error::No Xcode scheme found"
-            exit 1
-          fi
-          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
-          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
           xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
+            -workspace NextcloudCalendar.xcworkspace \
+            -scheme NextcloudCalendar \
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -derivedDataPath "$RUNNER_TEMP/ios-build" \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -113,10 +94,9 @@ jobs:
       - name: Package unsigned IPA
         id: package
         run: |
-          APP_PATH=$(find "$RUNNER_TEMP/ios-build/Build/Products/Release-iphoneos" \
-            -maxdepth 1 -name '*.app' | head -n 1)
-          if [ -z "$APP_PATH" ]; then
-            echo "::error::No .app bundle produced"
+          APP_PATH="ios/build/Build/Products/Release-iphoneos/NextcloudCalendar.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "::error::No .app bundle produced at $APP_PATH"
             exit 1
           fi
           VERSION=$(node -p "require('./package.json').version")
@@ -147,5 +127,6 @@ jobs:
           else
             gh release create "$RELEASE_TAG" "$IPA" \
               --title "iOS unsigned build" \
-              --notes "$NOTES"
+              --notes "$NOTES" \
+              --target "$GITHUB_SHA"
           fi
